@@ -1,0 +1,101 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Provides swagger docs and storage management.",
+        "title": "Swagger-Docs-Provider API",
+        "contact": {},
+        "license": {
+            "name": "Apache-2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "0.5.5"
+    },
+    "basePath": "/",
+    "paths": {
+        "/info": {
+            "get": {
+                "description": "Get basic service and runtime information.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Info"
+                ],
+                "summary": "Get service info",
+                "responses": {
+                    "200": {
+                        "description": "info",
+                        "schema": {
+                            "$ref": "#/definitions/lib.SrvInfo"
+                        }
+                    },
+                    "500": {
+                        "description": "error message",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "lib.MemStats": {
+            "type": "object",
+            "properties": {
+                "alloc": {
+                    "type": "integer"
+                },
+                "alloc_total": {
+                    "type": "integer"
+                },
+                "gc_cycles": {
+                    "type": "integer"
+                },
+                "sys_total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "lib.SrvInfo": {
+            "type": "object",
+            "properties": {
+                "mem_stats": {
+                    "$ref": "#/definitions/lib.MemStats"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "up_time": {
+                    "$ref": "#/definitions/time.Duration"
+                },
+                "version": {
+                    "type": "string"
+                }
+            }
+        },
+        "time.Duration": {
+            "type": "integer",
+            "enum": [
+                -9223372036854775808,
+                9223372036854775807,
+                1,
+                1000,
+                1000000,
+                1000000000,
+                60000000000,
+                3600000000000
+            ],
+            "x-enum-varnames": [
+                "minDuration",
+                "maxDuration",
+                "Nanosecond",
+                "Microsecond",
+                "Millisecond",
+                "Second",
+                "Minute",
+                "Hour"
+            ]
+        }
+    }
+}
