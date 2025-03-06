@@ -43,5 +43,5 @@ jobs:
           build-args: |
             VERSION=${{ steps.tag_version.outputs.new_tag }}
           tags: |
-            ghcr.io/senergy-platform/analytics-pipeline:latest
-            ghcr.io/senergy-platform/analytics-pipeline:${{ steps.tag_version.outputs.new_tag }}
+            ghcr.io/senergy-platform/analytics-flow-repo-v2:latest
+            ghcr.io/senergy-platform/analytics-flow-repo-v2:${{ steps.tag_version.outputs.new_tag }}
