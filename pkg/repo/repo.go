@@ -21,6 +21,7 @@ import (
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/models"
 	srv_info_hdl "github.com/SENERGY-Platform/mgw-go-service-base/srv-info-hdl"
 	srv_info_lib "github.com/SENERGY-Platform/mgw-go-service-base/srv-info-hdl/lib"
+	permV2Client "github.com/SENERGY-Platform/permissions-v2/pkg/client"
 )
 
 type Repo struct {
@@ -28,10 +29,10 @@ type Repo struct {
 	dbRepo     FlowRepository
 }
 
-func New(srvInfoHdl srv_info_hdl.SrvInfoHandler) *Repo {
+func New(srvInfoHdl srv_info_hdl.SrvInfoHandler, perm permV2Client.Client) *Repo {
 	return &Repo{
 		srvInfoHdl: srvInfoHdl,
-		dbRepo:     NewMongoRepo(),
+		dbRepo:     NewMongoRepo(perm),
 	}
 }
 
@@ -43,6 +44,23 @@ func (r *Repo) HealthCheck(ctx context.Context) error {
 	return nil
 }
 
+func (r *Repo) CreateFlow(flow models.Flow, userId string) (err error) {
+	flow.UserId = userId
+	return r.dbRepo.InsertFlow(flow)
+}
+
+func (r *Repo) UpdateFlow(id string, flow models.Flow, userId string) (err error) {
+	return r.dbRepo.UpdateFlow(id, flow, userId)
+}
+
+func (r *Repo) DeleteFlow(id string, userId string) (err error) {
+	return r.dbRepo.DeleteFlow(id, userId, false)
+}
+
 func (r *Repo) GetFlows(userId string, args map[string][]string) (response models.FlowsResponse, err error) {
 	return r.dbRepo.All(userId, false, args)
+}
+
+func (r *Repo) GetFlow(flowId string, userId string) (response models.Flow, err error) {
+	return r.dbRepo.FindFlow(flowId, userId)
 }

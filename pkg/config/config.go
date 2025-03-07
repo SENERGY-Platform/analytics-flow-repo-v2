@@ -21,10 +21,11 @@ import "github.com/y-du/go-log-level/level"
 import "github.com/SENERGY-Platform/go-service-base/config-hdl"
 
 type Config struct {
-	ServerPort  int           `json:"server_port" env_var:"SERVER_PORT"`
-	Logger      LoggerConfig  `json:"logger" env_var:"LOGGER_CONFIG"`
-	MongoUrl    string        `json:"mongo_url" env_var:"MONGO_URL"`
-	HttpTimeout time.Duration `json:"http_timeout" env_var:"HTTP_TIMEOUT"`
+	ServerPort       int           `json:"server_port" env_var:"SERVER_PORT"`
+	Logger           LoggerConfig  `json:"logger" env_var:"LOGGER_CONFIG"`
+	MongoUrl         string        `json:"mongo_url" env_var:"MONGO_URL"`
+	HttpTimeout      time.Duration `json:"http_timeout" env_var:"HTTP_TIMEOUT"`
+	PermissionsV2Url string        `json:"permissions_v2_url" env_var:"PERMISSIONS_V2_URL"`
 }
 
 type LoggerConfig struct {
@@ -46,8 +47,9 @@ func New(path string) (*Config, error) {
 			Microseconds: true,
 			Terminal:     true,
 		},
-		MongoUrl:    "localhost:27017",
-		HttpTimeout: time.Second * 30,
+		MongoUrl:         "localhost:27017",
+		HttpTimeout:      time.Second * 30,
+		PermissionsV2Url: "http://permv2.permissions:8080",
 	}
 	err := config_hdl.Load(&cfg, nil, envTypeParser, nil, path)
 	return &cfg, err

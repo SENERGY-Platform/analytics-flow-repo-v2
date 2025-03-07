@@ -17,6 +17,7 @@
 package api
 
 import (
+	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/models"
 	"github.com/SENERGY-Platform/service-commons/pkg/jwt"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -39,6 +40,49 @@ func getInfoH(srv Repo) (string, string, gin.HandlerFunc) {
 	}
 }
 
+func putFlow(srv Repo) (string, string, gin.HandlerFunc) {
+	return http.MethodPut, "/flow/", func(gc *gin.Context) {
+		var request models.Flow
+		if err := gc.ShouldBindJSON(&request); err != nil {
+			_ = gc.Error(err)
+			return
+		}
+		err := srv.CreateFlow(request, getUserId(gc))
+		if err != nil {
+			_ = gc.Error(err)
+			return
+		}
+		gc.Status(http.StatusCreated)
+	}
+}
+
+func postFlow(srv Repo) (string, string, gin.HandlerFunc) {
+	return http.MethodPost, "/flow/:id/", func(gc *gin.Context) {
+		var request models.Flow
+		if err := gc.ShouldBindJSON(&request); err != nil {
+			_ = gc.Error(err)
+			return
+		}
+		err := srv.UpdateFlow(gc.Param("id"), request, getUserId(gc))
+		if err != nil {
+			_ = gc.Error(err)
+			return
+		}
+		gc.Status(http.StatusOK)
+	}
+}
+
+func deleteFlow(srv Repo) (string, string, gin.HandlerFunc) {
+	return http.MethodDelete, "/flow/:id/", func(gc *gin.Context) {
+		err := srv.DeleteFlow(gc.Param("id"), getUserId(gc))
+		if err != nil {
+			_ = gc.Error(err)
+			return
+		}
+		gc.Status(http.StatusNoContent)
+	}
+}
+
 func getAll(srv Repo) (string, string, gin.HandlerFunc) {
 	return http.MethodGet, "/flow", func(gc *gin.Context) {
 		args := gc.Request.URL.Query()
@@ -48,6 +92,17 @@ func getAll(srv Repo) (string, string, gin.HandlerFunc) {
 			return
 		}
 		gc.JSON(http.StatusOK, flows)
+	}
+}
+
+func getFlow(srv Repo) (string, string, gin.HandlerFunc) {
+	return http.MethodGet, "/flow/:id", func(gc *gin.Context) {
+		flow, err := srv.GetFlow(gc.Param("id"), getUserId(gc))
+		if err != nil {
+			_ = gc.Error(err)
+			return
+		}
+		gc.JSON(http.StatusOK, flow)
 	}
 }
 
@@ -76,7 +131,6 @@ func getSwaggerDocH(_ Repo) (string, string, gin.HandlerFunc) {
 func getUserId(c *gin.Context) (userId string) {
 	forUser := c.Query("for_user")
 	if forUser != "" {
-
 		roles := strings.Split(c.GetHeader("X-User-Roles"), ", ")
 		if slices.Contains[[]string](roles, "admin") {
 			return forUser

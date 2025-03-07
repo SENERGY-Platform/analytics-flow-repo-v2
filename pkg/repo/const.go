@@ -14,17 +14,6 @@
  * limitations under the License.
  */
 
-package api
+package repo
 
-import gin_mw "github.com/SENERGY-Platform/gin-middleware"
-
-var routes = gin_mw.Routes[Repo]{
-	getInfoH,
-	getHealthCheckH,
-	getSwaggerDocH,
-	getAll,
-	getFlow,
-	putFlow,
-	postFlow,
-	deleteFlow,
-}
+const PermV2InstanceTopic = "analytics-flows"

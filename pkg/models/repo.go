@@ -26,40 +26,41 @@ type FlowsResponse struct {
 	Total int64  `json:"total"`
 }
 type Flow struct {
-	Id          primitive.ObjectID `bson:"_id,omitempty" json:"_id"`
-	Name        string             `json:"name"`
-	Description string             `json:"description"`
-	Model       Model              `json:"model"`
-	Image       string             `json:"image"`
-	Share       Share              `json:"share"`
-	UserId      string             `json:"userId"`
-	DateCreated time.Time          `json:"dateCreated"`
-	DateUpdated time.Time          `json:"dateUpdated"`
+	Id          *primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
+	Name        string              `json:"name,omitempty"`
+	Description *string             `json:"description,omitempty"`
+	Model       Model               `json:"model,omitempty"`
+	Image       *string             `json:"image,omitempty"`
+	Share       *Share              `json:"share,omitempty"`
+	UserId      string              `bson:"userId,omitempty" json:"userId,omitempty"`
+	DateCreated time.Time           `bson:"dateCreated,omitempty" json:"dateCreated,omitempty"`
+	DateUpdated time.Time           `bson:"dateUpdated,omitempty" json:"dateUpdated,omitempty"`
 }
 
 type Share struct {
-	List  bool `json:"list"`
-	Read  bool `json:"read"`
-	Write bool `json:"write"`
+	List  *bool `json:"list,omitempty"`
+	Read  *bool `json:"read,omitempty"`
+	Write *bool `json:"write,omitempty"`
 }
 
 type Model struct {
-	Cells []Cell `json:"cells"`
+	Cells []Cell `json:"cells,omitempty"`
 }
 
 type Cell struct {
-	Type           string        `json:"type"`
-	InPorts        []string      `json:"inPorts"`
-	OutPorts       []string      `json:"outPorts"`
-	Name           *string       `json:"name"`
-	Image          *string       `json:"image"`
-	OperatorId     *string       `json:"operatorId"`
-	Position       *CellPosition `json:"position"`
-	Source         *CellLink     `json:"source"`
-	Target         *CellLink     `json:"target"`
-	Id             string        `json:"id"`
-	Cost           *int64        `json:"cost"`
-	DeploymentType *string       `json:"deploymentType"`
+	Type           string         `json:"type,omitempty"`
+	InPorts        []string       `json:"inPorts,omitempty"`
+	OutPorts       []string       `json:"outPorts,omitempty"`
+	Name           *string        `json:"name,omitempty"`
+	Image          *string        `json:"image,omitempty"`
+	OperatorId     *string        `json:"operatorId,omitempty"`
+	Position       *CellPosition  `json:"position,omitempty"`
+	Source         *CellLink      `json:"source,omitempty"`
+	Target         *CellLink      `json:"target,omitempty"`
+	Id             string         `json:"id,omitempty"`
+	Config         *[]ConfigValue `json:"config,omitempty"`
+	Cost           *int64         `json:"cost,omitempty"`
+	DeploymentType *string        `json:"deploymentType,omitempty"`
 }
 
 type CellPosition struct {
@@ -71,4 +72,9 @@ type CellLink struct {
 	Id     string `json:"id"`
 	Magnet string `json:"magnet"`
 	Port   string `json:"port"`
+}
+
+type ConfigValue struct {
+	Name string `json:"name,omitempty"`
+	Type string `json:"type,omitempty"`
 }

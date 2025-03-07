@@ -18,23 +18,85 @@ package repo
 
 import (
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/models"
+	permV2Client "github.com/SENERGY-Platform/permissions-v2/pkg/client"
+	permV2Model "github.com/SENERGY-Platform/permissions-v2/pkg/model"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type FlowRepository interface {
+	InsertFlow(flow models.Flow) (err error)
+	UpdateFlow(id string, flow models.Flow, userId string) (err error)
+	DeleteFlow(id string, userId string, admin bool) (err error)
 	All(userId string, admin bool, args map[string][]string) (response models.FlowsResponse, err error)
+	FindFlow(id string, userId string) (flow models.Flow, err error)
 }
 
 type MongoRepo struct {
+	perm permV2Client.Client
 }
 
-func NewMongoRepo() *MongoRepo {
-	return &MongoRepo{}
+func NewMongoRepo(perm permV2Client.Client) *MongoRepo {
+	_, err, _ := perm.SetTopic(permV2Client.InternalAdminToken, permV2Client.Topic{
+		Id: PermV2InstanceTopic,
+		DefaultPermissions: permV2Client.ResourcePermissions{
+			RolePermissions: map[string]permV2Model.PermissionsMap{
+				"admin": {
+					Read:         true,
+					Write:        true,
+					Execute:      true,
+					Administrate: true,
+				},
+			},
+		},
+	})
+	if err != nil {
+		return nil
+	}
+	return &MongoRepo{perm: perm}
+}
+
+func (r *MongoRepo) InsertFlow(flow models.Flow) (err error) {
+	flow.DateCreated = time.Now()
+	flow.DateUpdated = time.Now()
+	_, err = Mongo().InsertOne(CTX, flow)
+	if err != nil {
+		return err
+	}
+	return
+}
+
+func (r *MongoRepo) UpdateFlow(id string, flow models.Flow, userId string) (err error) {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return
+	}
+	flow.DateUpdated = time.Now()
+	_, err = Mongo().ReplaceOne(CTX, bson.M{"_id": objID,
+		"$or": []interface{}{
+			bson.M{"userId": userId},
+			bson.M{"share.write": true},
+		}}, flow)
+	return
+}
+
+func (r *MongoRepo) DeleteFlow(id string, userId string, admin bool) (err error) {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return
+	}
+	req := bson.M{"_id": objID, "userId": userId}
+	if admin {
+		req = bson.M{"_id": objID}
+	}
+	res := Mongo().FindOneAndDelete(CTX, req)
+	return res.Err()
 }
 
 func (r *MongoRepo) All(userId string, admin bool, args map[string][]string) (response models.FlowsResponse, err error) {
@@ -85,10 +147,26 @@ func (r *MongoRepo) All(userId string, admin bool, args map[string][]string) (re
 		var elem models.Flow
 		err = cur.Decode(&elem)
 		if err != nil {
-			log.Fatal(err)
 			return
 		}
 		response.Flows = append(response.Flows, elem)
+	}
+	return
+}
+
+func (r *MongoRepo) FindFlow(id string, userId string) (flow models.Flow, err error) {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return
+	}
+	err = Mongo().FindOne(CTX, bson.M{"_id": objID,
+		"$or": []interface{}{
+			bson.M{"userId": userId},
+			bson.M{"share.read": true},
+		}}).Decode(&flow)
+	if err != nil {
+		log.Println(err)
+		return
 	}
 	return
 }

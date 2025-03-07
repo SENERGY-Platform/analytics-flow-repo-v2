@@ -19,20 +19,29 @@ package api
 import (
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/util"
 	gin_mw "github.com/SENERGY-Platform/gin-middleware"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
 )
 
 // New godoc
-// @title Swagger-Docs-Provider API
-// @version 0.5.5
-// @description Provides swagger docs and storage management.
+// @title Analytics-Flow-Repo-V2 API
+// @version 0.0.1
+// @description For the administration of analytics flows.
 // @license.name Apache-2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 // @BasePath /
 func New(srv Repo, staticHeader map[string]string) (*gin.Engine, error) {
 	gin.SetMode(gin.ReleaseMode)
 	httpHandler := gin.New()
+	httpHandler.RedirectTrailingSlash = false
+	httpHandler.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"GET", "POST", "DELETE", "OPTIONS", "PUT"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+	}))
 	httpHandler.Use(gin_mw.StaticHeaderHandler(staticHeader), requestid.New(requestid.WithCustomHeaderStrKey(HeaderRequestID)),
 		gin_mw.LoggerHandler(util.Logger, []string{HealthCheckPath}, func(gc *gin.Context) string {
 			return requestid.Get(gc)

@@ -27,6 +27,7 @@ import (
 	sb_logger "github.com/SENERGY-Platform/go-service-base/logger"
 	srv_info_hdl "github.com/SENERGY-Platform/mgw-go-service-base/srv-info-hdl"
 	sb_util "github.com/SENERGY-Platform/mgw-go-service-base/util"
+	permV2Client "github.com/SENERGY-Platform/permissions-v2/pkg/client"
 	"os"
 	"sync"
 	"syscall"
@@ -73,10 +74,19 @@ func main() {
 		ec = 1
 		return
 	}
-	util.Logger.Debugf("Connected to DB")
+	util.Logger.Debugf("connected to database")
 	defer repo.CloseDB()
 
-	srv := repo.New(srvInfoHdl)
+	ctx, cf := context.WithCancel(context.Background())
+	var perm permV2Client.Client
+
+	if cfg.PermissionsV2Url == "mock" {
+		util.Logger.Debugf("using mock permissions")
+		perm, err = permV2Client.NewTestClient(ctx)
+	} else {
+		perm = permV2Client.New(cfg.PermissionsV2Url)
+	}
+	srv := repo.New(srvInfoHdl, perm)
 
 	httpHandler, err := api.New(srv, map[string]string{
 		api.HeaderApiVer:  srvInfoHdl.GetVersion(),
@@ -89,8 +99,6 @@ func main() {
 	}
 
 	httpServer := util.NewServer(httpHandler, cfg.ServerPort)
-
-	ctx, cf := context.WithCancel(context.Background())
 
 	go func() {
 		util.WaitForSignal(ctx, syscall.SIGINT, syscall.SIGTERM)
