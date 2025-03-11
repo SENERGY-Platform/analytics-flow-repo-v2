@@ -26,6 +26,7 @@ type Config struct {
 	MongoUrl         string        `json:"mongo_url" env_var:"MONGO_URL"`
 	HttpTimeout      time.Duration `json:"http_timeout" env_var:"HTTP_TIMEOUT"`
 	PermissionsV2Url string        `json:"permissions_v2_url" env_var:"PERMISSIONS_V2_URL"`
+	OperatorRepoUrl  string        `json:"operator_repo_url" env_var:"OPERATOR_REPO_URL"`
 }
 
 type LoggerConfig struct {
@@ -50,6 +51,7 @@ func New(path string) (*Config, error) {
 		MongoUrl:         "localhost:27017",
 		HttpTimeout:      time.Second * 30,
 		PermissionsV2Url: "http://permv2.permissions:8080",
+		OperatorRepoUrl:  "http://operator-repo:8080",
 	}
 	err := config_hdl.Load(&cfg, nil, envTypeParser, nil, path)
 	return &cfg, err

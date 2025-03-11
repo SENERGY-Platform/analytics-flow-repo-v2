@@ -19,20 +19,23 @@ package repo
 import (
 	"context"
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/models"
+	operator_api "github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/operator-api"
 	srv_info_hdl "github.com/SENERGY-Platform/mgw-go-service-base/srv-info-hdl"
 	srv_info_lib "github.com/SENERGY-Platform/mgw-go-service-base/srv-info-hdl/lib"
 	permV2Client "github.com/SENERGY-Platform/permissions-v2/pkg/client"
 )
 
 type Repo struct {
-	srvInfoHdl srv_info_hdl.SrvInfoHandler
-	dbRepo     FlowRepository
+	srvInfoHdl   srv_info_hdl.SrvInfoHandler
+	dbRepo       FlowRepository
+	operatorRepo *operator_api.Repo
 }
 
-func New(srvInfoHdl srv_info_hdl.SrvInfoHandler, perm permV2Client.Client) *Repo {
+func New(srvInfoHdl srv_info_hdl.SrvInfoHandler, perm permV2Client.Client, operatorRepo *operator_api.Repo) *Repo {
 	return &Repo{
-		srvInfoHdl: srvInfoHdl,
-		dbRepo:     NewMongoRepo(perm),
+		srvInfoHdl:   srvInfoHdl,
+		dbRepo:       NewMongoRepo(perm),
+		operatorRepo: operatorRepo,
 	}
 }
 
@@ -44,13 +47,40 @@ func (r *Repo) HealthCheck(ctx context.Context) error {
 	return nil
 }
 
-func (r *Repo) CreateFlow(flow models.Flow, userId string) (err error) {
+func (r *Repo) CreateFlow(flow models.Flow, userId string, auth string) (err error) {
+	err = r.validateOperators(&flow, userId, auth)
+	if err != nil {
+		return
+	}
 	flow.UserId = userId
 	return r.dbRepo.InsertFlow(flow)
 }
 
-func (r *Repo) UpdateFlow(id string, flow models.Flow, userId string) (err error) {
+func (r *Repo) UpdateFlow(id string, flow models.Flow, userId string, auth string) (err error) {
+	err = r.validateOperators(&flow, userId, auth)
+	if err != nil {
+		return
+	}
 	return r.dbRepo.UpdateFlow(id, flow, userId)
+}
+
+func (r *Repo) validateOperators(flow *models.Flow, userId string, auth string) error {
+	for _, operator := range flow.Model.Cells {
+		if operator.Type == "senergy.NodeElement" {
+			op, err := r.operatorRepo.GetOperator(*operator.OperatorId, userId, auth)
+			if err != nil {
+				return err
+			}
+			*operator.Name = op.Name
+			*operator.Image = op.Image
+			*operator.DeploymentType = op.DeploymentType
+			if op.Cost != nil {
+				*operator.Cost = *op.Cost
+			}
+
+		}
+	}
+	return nil
 }
 
 func (r *Repo) DeleteFlow(id string, userId string) (err error) {

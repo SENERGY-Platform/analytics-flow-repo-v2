@@ -1,17 +1,178 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "Provides swagger docs and storage management.",
-        "title": "Swagger-Docs-Provider API",
+        "description": "For the administration of analytics flows.",
+        "title": "Analytics-Flow-Repo-V2 API",
         "contact": {},
         "license": {
             "name": "Apache-2.0",
             "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
         },
-        "version": "0.5.5"
+        "version": "0.0.1"
     },
     "basePath": "/",
     "paths": {
+        "/flow": {
+            "get": {
+                "description": "Gets all flows",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Flow"
+                ],
+                "summary": "Get flows",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.FlowsResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/flow/": {
+            "put": {
+                "description": "Validates and stores a flow",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Flow"
+                ],
+                "summary": "Create flow",
+                "parameters": [
+                    {
+                        "description": "Create flow",
+                        "name": "flow",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Flow"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/flow/{id}": {
+            "get": {
+                "description": "Gets a single flow",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Flow"
+                ],
+                "summary": "Get flow",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Flow ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Flow"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Validates and updates a flow",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Flow"
+                ],
+                "summary": "Update flow",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Flow ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update flow",
+                        "name": "flow",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Flow"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes a flow",
+                "tags": [
+                    "Flow"
+                ],
+                "summary": "Delete flow",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Flow ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/info": {
             "get": {
                 "description": "Get basic service and runtime information.",
@@ -74,27 +235,179 @@
                 }
             }
         },
+        "models.Cell": {
+            "type": "object",
+            "properties": {
+                "config": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.ConfigValue"
+                    }
+                },
+                "cost": {
+                    "type": "integer"
+                },
+                "deploymentType": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "image": {
+                    "type": "string"
+                },
+                "inPorts": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "operatorId": {
+                    "type": "string"
+                },
+                "outPorts": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "position": {
+                    "$ref": "#/definitions/models.CellPosition"
+                },
+                "source": {
+                    "$ref": "#/definitions/models.CellLink"
+                },
+                "target": {
+                    "$ref": "#/definitions/models.CellLink"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.CellLink": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "magnet": {
+                    "type": "string"
+                },
+                "port": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.CellPosition": {
+            "type": "object",
+            "properties": {
+                "x": {
+                    "type": "number"
+                },
+                "y": {
+                    "type": "number"
+                }
+            }
+        },
+        "models.ConfigValue": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Flow": {
+            "type": "object",
+            "properties": {
+                "_id": {
+                    "type": "string"
+                },
+                "dateCreated": {
+                    "type": "string"
+                },
+                "dateUpdated": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "image": {
+                    "type": "string"
+                },
+                "model": {
+                    "$ref": "#/definitions/models.Model"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "share": {
+                    "$ref": "#/definitions/models.Share"
+                },
+                "userId": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.FlowsResponse": {
+            "type": "object",
+            "properties": {
+                "flows": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Flow"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.Model": {
+            "type": "object",
+            "properties": {
+                "cells": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Cell"
+                    }
+                }
+            }
+        },
+        "models.Share": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "type": "boolean"
+                },
+                "read": {
+                    "type": "boolean"
+                },
+                "write": {
+                    "type": "boolean"
+                }
+            }
+        },
         "time.Duration": {
             "type": "integer",
             "enum": [
-                -9223372036854775808,
-                9223372036854775807,
                 1,
                 1000,
                 1000000,
-                1000000000,
-                60000000000,
-                3600000000000
+                1000000000
             ],
             "x-enum-varnames": [
-                "minDuration",
-                "maxDuration",
                 "Nanosecond",
                 "Microsecond",
                 "Millisecond",
-                "Second",
-                "Minute",
-                "Hour"
+                "Second"
             ]
         }
     }

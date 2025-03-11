@@ -17,7 +17,9 @@
 package api
 
 import (
+	"errors"
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/models"
+	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/util"
 	"github.com/SENERGY-Platform/service-commons/pkg/jwt"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -40,66 +42,117 @@ func getInfoH(srv Repo) (string, string, gin.HandlerFunc) {
 	}
 }
 
+// putFlow godoc
+// @Summary Create flow
+// @Description	Validates and stores a flow
+// @Tags Flow
+// @Param flow body models.Flow	true "Create flow"
+// @Accept       json
+// @Success	201
+// @Failure	500 {string} str
+// @Router /flow/ [put]
 func putFlow(srv Repo) (string, string, gin.HandlerFunc) {
 	return http.MethodPut, "/flow/", func(gc *gin.Context) {
 		var request models.Flow
 		if err := gc.ShouldBindJSON(&request); err != nil {
-			_ = gc.Error(err)
+			util.Logger.Errorf("CreateFlow: %s", err)
+			_ = gc.Error(errors.New("something went wrong"))
 			return
 		}
-		err := srv.CreateFlow(request, getUserId(gc))
+		err := srv.CreateFlow(request, getUserId(gc), gc.GetHeader("Authorization"))
 		if err != nil {
-			_ = gc.Error(err)
+			util.Logger.Errorf("CreateFlow: %s", err)
+			_ = gc.Error(errors.New("something went wrong"))
 			return
 		}
 		gc.Status(http.StatusCreated)
 	}
 }
 
+// postFlow godoc
+// @Summary Update flow
+// @Description	Validates and updates a flow
+// @Tags Flow
+// @Accept       json
+// @Param id path string true "Flow ID"
+// @Param flow body models.Flow	true "Update flow"
+// @Success	200
+// @Failure	500 {string} str
+// @Router /flow/{id} [post]
 func postFlow(srv Repo) (string, string, gin.HandlerFunc) {
 	return http.MethodPost, "/flow/:id/", func(gc *gin.Context) {
 		var request models.Flow
 		if err := gc.ShouldBindJSON(&request); err != nil {
-			_ = gc.Error(err)
+			util.Logger.Errorf("UpdateFlow: %s", err)
+			_ = gc.Error(errors.New("something went wrong"))
 			return
 		}
-		err := srv.UpdateFlow(gc.Param("id"), request, getUserId(gc))
+		err := srv.UpdateFlow(gc.Param("id"), request, getUserId(gc), gc.GetHeader("Authorization"))
 		if err != nil {
-			_ = gc.Error(err)
+			util.Logger.Errorf("UpdateFlow: %s", err)
+			_ = gc.Error(errors.New("something went wrong"))
 			return
 		}
 		gc.Status(http.StatusOK)
 	}
 }
 
+// deleteFlow godoc
+// @Summary Delete flow
+// @Description	Deletes a flow
+// @Tags Flow
+// @Param id path string true "Flow ID"
+// @Success	204
+// @Failure	500 {string} str
+// @Router /flow/{id} [delete]
 func deleteFlow(srv Repo) (string, string, gin.HandlerFunc) {
 	return http.MethodDelete, "/flow/:id/", func(gc *gin.Context) {
 		err := srv.DeleteFlow(gc.Param("id"), getUserId(gc))
 		if err != nil {
-			_ = gc.Error(err)
+			util.Logger.Errorf("DeleteFlow: %s", err)
+			_ = gc.Error(errors.New("something went wrong"))
 			return
 		}
 		gc.Status(http.StatusNoContent)
 	}
 }
 
+// getAll godoc
+// @Summary Get flows
+// @Description	Gets all flows
+// @Tags Flow
+// @Produce json
+// @Success	200 {object} models.FlowsResponse
+// @Failure	500 {string} str
+// @Router /flow [get]
 func getAll(srv Repo) (string, string, gin.HandlerFunc) {
 	return http.MethodGet, "/flow", func(gc *gin.Context) {
 		args := gc.Request.URL.Query()
 		flows, err := srv.GetFlows(getUserId(gc), args)
 		if err != nil {
-			_ = gc.Error(err)
+			util.Logger.Errorf("GetFlows: %s", err)
+			_ = gc.Error(errors.New("something went wrong"))
 			return
 		}
 		gc.JSON(http.StatusOK, flows)
 	}
 }
 
+// getFlow godoc
+// @Summary Get flow
+// @Description	Gets a single flow
+// @Tags Flow
+// @Produce json
+// @Param id path string true "Flow ID"
+// @Success	200 {object} models.Flow
+// @Failure	500 {string} str
+// @Router /flow/{id} [get]
 func getFlow(srv Repo) (string, string, gin.HandlerFunc) {
 	return http.MethodGet, "/flow/:id", func(gc *gin.Context) {
 		flow, err := srv.GetFlow(gc.Param("id"), getUserId(gc))
 		if err != nil {
-			_ = gc.Error(err)
+			util.Logger.Errorf("GetFlow: %s", err)
+			_ = gc.Error(errors.New("something went wrong"))
 			return
 		}
 		gc.JSON(http.StatusOK, flow)

@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/api"
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/config"
+	operator_api "github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/operator-api"
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/repo"
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/util"
 	sb_logger "github.com/SENERGY-Platform/go-service-base/logger"
@@ -86,7 +87,8 @@ func main() {
 	} else {
 		perm = permV2Client.New(cfg.PermissionsV2Url)
 	}
-	srv := repo.New(srvInfoHdl, perm)
+	operatorRepo := operator_api.New(cfg.OperatorRepoUrl)
+	srv := repo.New(srvInfoHdl, perm, operatorRepo)
 
 	httpHandler, err := api.New(srv, map[string]string{
 		api.HeaderApiVer:  srvInfoHdl.GetVersion(),
