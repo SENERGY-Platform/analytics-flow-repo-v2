@@ -17,6 +17,7 @@
 package models
 
 import (
+	permV2Client "github.com/SENERGY-Platform/permissions-v2/pkg/client"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"time"
 )
@@ -77,4 +78,13 @@ type CellLink struct {
 type ConfigValue struct {
 	Name string `json:"name,omitempty"`
 	Type string `json:"type,omitempty"`
+}
+
+func SetDefaultPermissions(instance Flow, permissions permV2Client.ResourcePermissions) {
+	permissions.UserPermissions[instance.UserId] = permV2Client.PermissionsMap{
+		Read:         true,
+		Write:        true,
+		Execute:      true,
+		Administrate: true,
+	}
 }

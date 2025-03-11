@@ -107,7 +107,7 @@ func postFlow(srv Repo) (string, string, gin.HandlerFunc) {
 // @Router /flow/{id} [delete]
 func deleteFlow(srv Repo) (string, string, gin.HandlerFunc) {
 	return http.MethodDelete, "/flow/:id/", func(gc *gin.Context) {
-		err := srv.DeleteFlow(gc.Param("id"), getUserId(gc))
+		err := srv.DeleteFlow(gc.Param("id"), getUserId(gc), gc.GetHeader("Authorization"))
 		if err != nil {
 			util.Logger.Errorf("DeleteFlow: %s", err)
 			_ = gc.Error(errors.New("something went wrong"))
@@ -128,7 +128,7 @@ func deleteFlow(srv Repo) (string, string, gin.HandlerFunc) {
 func getAll(srv Repo) (string, string, gin.HandlerFunc) {
 	return http.MethodGet, "/flow", func(gc *gin.Context) {
 		args := gc.Request.URL.Query()
-		flows, err := srv.GetFlows(getUserId(gc), args)
+		flows, err := srv.GetFlows(getUserId(gc), args, gc.GetHeader("Authorization"))
 		if err != nil {
 			util.Logger.Errorf("GetFlows: %s", err)
 			_ = gc.Error(errors.New("something went wrong"))
@@ -149,7 +149,7 @@ func getAll(srv Repo) (string, string, gin.HandlerFunc) {
 // @Router /flow/{id} [get]
 func getFlow(srv Repo) (string, string, gin.HandlerFunc) {
 	return http.MethodGet, "/flow/:id", func(gc *gin.Context) {
-		flow, err := srv.GetFlow(gc.Param("id"), getUserId(gc))
+		flow, err := srv.GetFlow(gc.Param("id"), getUserId(gc), gc.GetHeader("Authorization"))
 		if err != nil {
 			util.Logger.Errorf("GetFlow: %s", err)
 			_ = gc.Error(errors.New("something went wrong"))

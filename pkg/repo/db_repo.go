@@ -17,7 +17,9 @@
 package repo
 
 import (
+	"errors"
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/models"
+	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/util"
 	permV2Client "github.com/SENERGY-Platform/permissions-v2/pkg/client"
 	permV2Model "github.com/SENERGY-Platform/permissions-v2/pkg/model"
 	"go.mongodb.org/mongo-driver/bson"
@@ -25,6 +27,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
+	"maps"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -32,10 +36,10 @@ import (
 
 type FlowRepository interface {
 	InsertFlow(flow models.Flow) (err error)
-	UpdateFlow(id string, flow models.Flow, userId string) (err error)
-	DeleteFlow(id string, userId string, admin bool) (err error)
-	All(userId string, admin bool, args map[string][]string) (response models.FlowsResponse, err error)
-	FindFlow(id string, userId string) (flow models.Flow, err error)
+	UpdateFlow(id string, flow models.Flow, userId string, auth string) (err error)
+	DeleteFlow(id string, userId string, admin bool, auth string) (err error)
+	All(userId string, admin bool, args map[string][]string, auth string) (response models.FlowsResponse, err error)
+	FindFlow(id string, userId string, auth string) (flow models.Flow, err error)
 }
 
 type MongoRepo struct {
@@ -62,17 +66,83 @@ func NewMongoRepo(perm permV2Client.Client) *MongoRepo {
 	return &MongoRepo{perm: perm}
 }
 
+func (r *MongoRepo) validateFlowPermissions() {
+	util.Logger.Debugf("validate flows permissions")
+	resp, err := r.All("", true, map[string][]string{}, "")
+	if err != nil {
+		util.Logger.Fatal(err)
+	}
+	permResources, err, _ := r.perm.ListResourcesWithAdminPermission(permV2Client.InternalAdminToken, PermV2InstanceTopic, permV2Client.ListOptions{})
+	if err != nil {
+		util.Logger.Fatal(err)
+	}
+	permResourceMap := map[string]permV2Client.Resource{}
+	for _, permResource := range permResources {
+		permResourceMap[permResource.Id] = permResource
+	}
+
+	dbIds := []string{}
+	for _, flow := range resp.Flows {
+		permissions := permV2Client.ResourcePermissions{
+			UserPermissions:  map[string]permV2Client.PermissionsMap{},
+			GroupPermissions: map[string]permV2Client.PermissionsMap{},
+			RolePermissions:  map[string]permV2Model.PermissionsMap{},
+		}
+		flowId := flow.Id.Hex()
+		dbIds = append(dbIds, flowId)
+		resource, ok := permResourceMap[flowId]
+		if ok {
+			permissions.UserPermissions = resource.ResourcePermissions.UserPermissions
+			permissions.GroupPermissions = resource.GroupPermissions
+			permissions.RolePermissions = resource.ResourcePermissions.RolePermissions
+		}
+		models.SetDefaultPermissions(flow, permissions)
+
+		_, err, _ = r.perm.SetPermission(permV2Client.InternalAdminToken, PermV2InstanceTopic, flowId, permissions)
+		if err != nil {
+			util.Logger.Fatal(err)
+		}
+	}
+	permResourceIds := maps.Keys(permResourceMap)
+
+	for permResouceId := range permResourceIds {
+		if !slices.Contains(dbIds, permResouceId) {
+			err, _ = r.perm.RemoveResource(permV2Client.InternalAdminToken, PermV2InstanceTopic, permResouceId)
+			if err != nil {
+				util.Logger.Fatal(err)
+			}
+			util.Logger.Debugf("%s exists only in permissions-v2, now deleted", permResouceId)
+		}
+	}
+}
+
 func (r *MongoRepo) InsertFlow(flow models.Flow) (err error) {
 	flow.DateCreated = time.Now()
 	flow.DateUpdated = time.Now()
-	_, err = Mongo().InsertOne(CTX, flow)
+	permissions := permV2Client.ResourcePermissions{
+		GroupPermissions: map[string]permV2Client.PermissionsMap{},
+		UserPermissions:  map[string]permV2Client.PermissionsMap{},
+		RolePermissions:  map[string]permV2Model.PermissionsMap{},
+	}
+	models.SetDefaultPermissions(flow, permissions)
+	result, err := Mongo().InsertOne(CTX, flow)
+	id := result.InsertedID.(primitive.ObjectID).Hex()
 	if err != nil {
 		return err
 	}
+	_, err, _ = r.perm.SetPermission(permV2Client.InternalAdminToken, PermV2InstanceTopic, id, permissions)
 	return
 }
 
-func (r *MongoRepo) UpdateFlow(id string, flow models.Flow, userId string) (err error) {
+func (r *MongoRepo) UpdateFlow(id string, flow models.Flow, userId string, auth string) (err error) {
+	ok, err, _ := r.perm.CheckPermission(auth, PermV2InstanceTopic, id, permV2Client.Write)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return errors.New("requested instance nonexistent or missing rights")
+	}
+
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return
@@ -81,12 +151,19 @@ func (r *MongoRepo) UpdateFlow(id string, flow models.Flow, userId string) (err 
 	_, err = Mongo().ReplaceOne(CTX, bson.M{"_id": objID,
 		"$or": []interface{}{
 			bson.M{"userId": userId},
-			bson.M{"share.write": true},
 		}}, flow)
 	return
 }
 
-func (r *MongoRepo) DeleteFlow(id string, userId string, admin bool) (err error) {
+func (r *MongoRepo) DeleteFlow(id string, userId string, admin bool, auth string) (err error) {
+	ok, err, _ := r.perm.CheckPermission(auth, PermV2InstanceTopic, id, permV2Client.Administrate)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return errors.New("requested instance nonexistent or missing rights")
+	}
+
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return
@@ -96,10 +173,14 @@ func (r *MongoRepo) DeleteFlow(id string, userId string, admin bool) (err error)
 		req = bson.M{"_id": objID}
 	}
 	res := Mongo().FindOneAndDelete(CTX, req)
-	return res.Err()
+	if res.Err() != nil {
+		return res.Err()
+	}
+	err, _ = r.perm.RemoveResource(auth, PermV2InstanceTopic, id)
+	return
 }
 
-func (r *MongoRepo) All(userId string, admin bool, args map[string][]string) (response models.FlowsResponse, err error) {
+func (r *MongoRepo) All(userId string, admin bool, args map[string][]string, auth string) (response models.FlowsResponse, err error) {
 	opt := options.Find()
 	for arg, value := range args {
 		if arg == "limit" {
@@ -119,23 +200,52 @@ func (r *MongoRepo) All(userId string, admin bool, args map[string][]string) (re
 			opt.SetSort(bson.M{ord[0]: int64(order)})
 		}
 	}
+
 	var cur *mongo.Cursor
-	req := bson.M{"userId": userId}
-	if val, ok := args["search"]; ok {
-		req = bson.M{"userId": userId, "name": bson.M{"$regex": val[0]}}
-	}
-	if admin {
-		req = bson.M{}
+	var req = bson.M{}
+	var ids []string
+	if !admin {
+		ids, err, _ = r.perm.ListAccessibleResourceIds(auth, PermV2InstanceTopic, permV2Client.ListOptions{}, permV2Client.Read)
+		if err != nil {
+			return
+		}
+		req = bson.M{
+			"$or": []interface{}{
+				bson.M{"_id": bson.M{"$in": ids}},
+				bson.M{"userId": userId},
+			}}
+		if val, ok := args["search"]; ok {
+			req = bson.M{
+				"name": bson.M{"$regex": val[0]},
+				"$or": []interface{}{
+					bson.M{"_id": bson.M{"$in": ids}},
+					bson.M{"userId": userId},
+				}}
+		}
 	}
 	cur, err = Mongo().Find(CTX, req, opt)
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	req = bson.M{"userId": userId}
-	if admin {
-		req = bson.M{}
+
+	req = bson.M{}
+	if !admin {
+		req = bson.M{
+			"$or": []interface{}{
+				bson.M{"_id": bson.M{"$in": ids}},
+				bson.M{"userId": userId},
+			}}
+		if val, ok := args["search"]; ok {
+			req = bson.M{
+				"name": bson.M{"$regex": val[0]},
+				"$or": []interface{}{
+					bson.M{"_id": bson.M{"$in": ids}},
+					bson.M{"userId": userId},
+				}}
+		}
 	}
+
 	response.Total, err = Mongo().CountDocuments(CTX, req)
 	if err != nil {
 		log.Println(err)
@@ -154,16 +264,21 @@ func (r *MongoRepo) All(userId string, admin bool, args map[string][]string) (re
 	return
 }
 
-func (r *MongoRepo) FindFlow(id string, userId string) (flow models.Flow, err error) {
+func (r *MongoRepo) FindFlow(id string, userId string, auth string) (flow models.Flow, err error) {
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return
 	}
-	err = Mongo().FindOne(CTX, bson.M{"_id": objID,
-		"$or": []interface{}{
-			bson.M{"userId": userId},
-			bson.M{"share.read": true},
-		}}).Decode(&flow)
+
+	ok, err, _ := r.perm.CheckPermission(auth, PermV2InstanceTopic, id, permV2Client.Read)
+	if err != nil {
+		return flow, err
+	}
+	if !ok {
+		return flow, errors.New("requested instance nonexistent or missing rights")
+	}
+
+	err = Mongo().FindOne(CTX, bson.M{"_id": objID}).Decode(&flow)
 	if err != nil {
 		log.Println(err)
 		return

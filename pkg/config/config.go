@@ -27,6 +27,7 @@ type Config struct {
 	HttpTimeout      time.Duration `json:"http_timeout" env_var:"HTTP_TIMEOUT"`
 	PermissionsV2Url string        `json:"permissions_v2_url" env_var:"PERMISSIONS_V2_URL"`
 	OperatorRepoUrl  string        `json:"operator_repo_url" env_var:"OPERATOR_REPO_URL"`
+	URLPrefix        string        `json:"url_prefix" env_var:"URL_PREFIX"`
 }
 
 type LoggerConfig struct {

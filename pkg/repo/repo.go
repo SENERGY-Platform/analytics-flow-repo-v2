@@ -32,9 +32,11 @@ type Repo struct {
 }
 
 func New(srvInfoHdl srv_info_hdl.SrvInfoHandler, perm permV2Client.Client, operatorRepo *operator_api.Repo) *Repo {
+	dbRepo := NewMongoRepo(perm)
+	dbRepo.validateFlowPermissions()
 	return &Repo{
 		srvInfoHdl:   srvInfoHdl,
-		dbRepo:       NewMongoRepo(perm),
+		dbRepo:       dbRepo,
 		operatorRepo: operatorRepo,
 	}
 }
@@ -61,7 +63,7 @@ func (r *Repo) UpdateFlow(id string, flow models.Flow, userId string, auth strin
 	if err != nil {
 		return
 	}
-	return r.dbRepo.UpdateFlow(id, flow, userId)
+	return r.dbRepo.UpdateFlow(id, flow, userId, auth)
 }
 
 func (r *Repo) validateOperators(flow *models.Flow, userId string, auth string) error {
@@ -83,14 +85,14 @@ func (r *Repo) validateOperators(flow *models.Flow, userId string, auth string) 
 	return nil
 }
 
-func (r *Repo) DeleteFlow(id string, userId string) (err error) {
-	return r.dbRepo.DeleteFlow(id, userId, false)
+func (r *Repo) DeleteFlow(id string, userId string, auth string) (err error) {
+	return r.dbRepo.DeleteFlow(id, userId, false, auth)
 }
 
-func (r *Repo) GetFlows(userId string, args map[string][]string) (response models.FlowsResponse, err error) {
-	return r.dbRepo.All(userId, false, args)
+func (r *Repo) GetFlows(userId string, args map[string][]string, auth string) (response models.FlowsResponse, err error) {
+	return r.dbRepo.All(userId, false, args, auth)
 }
 
-func (r *Repo) GetFlow(flowId string, userId string) (response models.Flow, err error) {
-	return r.dbRepo.FindFlow(flowId, userId)
+func (r *Repo) GetFlow(flowId string, userId string, auth string) (response models.Flow, err error) {
+	return r.dbRepo.FindFlow(flowId, userId, auth)
 }

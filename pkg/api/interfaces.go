@@ -27,7 +27,7 @@ type Repo interface {
 	HealthCheck(ctx context.Context) error
 	CreateFlow(flow models.Flow, userId string, authString string) (err error)
 	UpdateFlow(id string, flow models.Flow, userId string, authString string) (err error)
-	DeleteFlow(id string, userId string) (err error)
-	GetFlows(userId string, args map[string][]string) (response models.FlowsResponse, err error)
-	GetFlow(flowId string, userId string) (response models.Flow, err error)
+	DeleteFlow(id string, userId string, auth string) (err error)
+	GetFlows(userId string, args map[string][]string, auth string) (response models.FlowsResponse, err error)
+	GetFlow(flowId string, userId string, auth string) (response models.Flow, err error)
 }

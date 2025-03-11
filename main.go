@@ -93,7 +93,7 @@ func main() {
 	httpHandler, err := api.New(srv, map[string]string{
 		api.HeaderApiVer:  srvInfoHdl.GetVersion(),
 		api.HeaderSrvName: srvInfoHdl.GetName(),
-	})
+	}, cfg.URLPrefix)
 	if err != nil {
 		util.Logger.Error(err)
 		ec = 1
