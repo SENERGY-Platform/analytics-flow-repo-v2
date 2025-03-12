@@ -8,7 +8,7 @@
             "name": "Apache-2.0",
             "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
         },
-        "version": "0.0.8"
+        "version": "0.0.9"
     },
     "basePath": "/",
     "paths": {
@@ -348,9 +348,6 @@
                 "name": {
                     "type": "string"
                 },
-                "share": {
-                    "$ref": "#/definitions/models.Share"
-                },
                 "userId": {
                     "type": "string"
                 }
@@ -381,45 +378,59 @@
                 }
             }
         },
-        "models.Share": {
-            "type": "object",
-            "properties": {
-                "list": {
-                    "type": "boolean"
-                },
-                "read": {
-                    "type": "boolean"
-                },
-                "write": {
-                    "type": "boolean"
-                }
-            }
-        },
         "time.Duration": {
             "type": "integer",
             "enum": [
+                -9223372036854775808,
+                9223372036854775807,
                 1,
                 1000,
                 1000000,
                 1000000000,
                 60000000000,
+                3600000000000,
+                -9223372036854775808,
+                9223372036854775807,
                 1,
                 1000,
                 1000000,
                 1000000000,
-                60000000000
+                60000000000,
+                3600000000000,
+                -9223372036854775808,
+                9223372036854775807,
+                1,
+                1000,
+                1000000,
+                1000000000,
+                60000000000,
+                3600000000000
             ],
             "x-enum-varnames": [
+                "minDuration",
+                "maxDuration",
                 "Nanosecond",
                 "Microsecond",
                 "Millisecond",
                 "Second",
                 "Minute",
+                "Hour",
+                "minDuration",
+                "maxDuration",
                 "Nanosecond",
                 "Microsecond",
                 "Millisecond",
                 "Second",
-                "Minute"
+                "Minute",
+                "Hour",
+                "minDuration",
+                "maxDuration",
+                "Nanosecond",
+                "Microsecond",
+                "Millisecond",
+                "Second",
+                "Minute",
+                "Hour"
             ]
         }
     }
