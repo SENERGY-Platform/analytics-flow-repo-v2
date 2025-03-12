@@ -148,10 +148,7 @@ func (r *MongoRepo) UpdateFlow(id string, flow models.Flow, userId string, auth 
 		return
 	}
 	flow.DateUpdated = time.Now()
-	_, err = Mongo().ReplaceOne(CTX, bson.M{"_id": objID,
-		"$or": []interface{}{
-			bson.M{"userId": userId},
-		}}, flow)
+	_, err = Mongo().ReplaceOne(CTX, bson.M{"_id": objID}, flow)
 	return
 }
 
@@ -168,10 +165,7 @@ func (r *MongoRepo) DeleteFlow(id string, userId string, admin bool, auth string
 	if err != nil {
 		return
 	}
-	req := bson.M{"_id": objID, "userId": userId}
-	if admin {
-		req = bson.M{"_id": objID}
-	}
+	req := bson.M{"_id": objID}
 	res := Mongo().FindOneAndDelete(CTX, req)
 	if res.Err() != nil {
 		return res.Err()
