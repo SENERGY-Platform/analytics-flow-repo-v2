@@ -32,16 +32,9 @@ type Flow struct {
 	Description *string             `json:"description,omitempty"`
 	Model       Model               `json:"model,omitempty"`
 	Image       *string             `json:"image,omitempty"`
-	Share       *Share              `json:"share,omitempty"`
 	UserId      string              `bson:"userId,omitempty" json:"userId,omitempty"`
 	DateCreated time.Time           `bson:"dateCreated,omitempty" json:"dateCreated,omitempty"`
 	DateUpdated time.Time           `bson:"dateUpdated,omitempty" json:"dateUpdated,omitempty"`
-}
-
-type Share struct {
-	List  *bool `json:"list,omitempty"`
-	Read  *bool `json:"read,omitempty"`
-	Write *bool `json:"write,omitempty"`
 }
 
 type Model struct {
