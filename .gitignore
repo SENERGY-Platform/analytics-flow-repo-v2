@@ -1,2 +1,4 @@
 config.json
 .idea
+__debug*
+.vscode

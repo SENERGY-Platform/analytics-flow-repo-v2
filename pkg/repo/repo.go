@@ -67,19 +67,19 @@ func (r *Repo) UpdateFlow(id string, flow models.Flow, userId string, auth strin
 }
 
 func (r *Repo) validateOperators(flow *models.Flow, userId string, auth string) error {
-	for _, operator := range flow.Model.Cells {
+	for i, operator := range flow.Model.Cells {
 		if operator.Type == "senergy.NodeElement" {
 			op, err := r.operatorRepo.GetOperator(*operator.OperatorId, userId, auth)
 			if err != nil {
 				return err
 			}
-			*operator.Name = op.Name
-			*operator.Image = op.Image
-			*operator.DeploymentType = op.DeploymentType
+			operator.Name = &op.Name
+			operator.Image = &op.Image
+			operator.DeploymentType = &op.DeploymentType
 			if op.Cost != nil {
-				*operator.Cost = *op.Cost
+				operator.Cost = op.Cost
 			}
-
+			flow.Model.Cells[i] = operator
 		}
 	}
 	return nil
