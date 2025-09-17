@@ -1,11 +1,14 @@
 module github.com/SENERGY-Platform/analytics-flow-repo-v2
 
-go 1.23.4
+go 1.24.0
+
+toolchain go1.24.7
 
 require (
 	github.com/SENERGY-Platform/gin-middleware v0.5.1
 	github.com/SENERGY-Platform/go-service-base/config-hdl v1.1.0
 	github.com/SENERGY-Platform/go-service-base/logger v1.0.0
+	github.com/SENERGY-Platform/go-service-base/struct-logger v0.4.1
 	github.com/SENERGY-Platform/mgw-go-service-base/srv-info-hdl v0.0.4
 	github.com/SENERGY-Platform/mgw-go-service-base/srv-info-hdl/lib v0.0.3
 	github.com/SENERGY-Platform/mgw-go-service-base/util v1.1.1
@@ -14,6 +17,7 @@ require (
 	github.com/gin-contrib/cors v1.7.3
 	github.com/gin-contrib/requestid v1.0.4
 	github.com/gin-gonic/gin v1.10.0
+	github.com/parnurzeal/gorequest v0.3.0
 	github.com/y-du/go-log-level v1.0.0
 	go.mongodb.org/mongo-driver v1.17.3
 )
@@ -25,6 +29,7 @@ require (
 	github.com/bytedance/sonic v1.12.7 // indirect
 	github.com/bytedance/sonic/loader v0.2.2 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
+	github.com/elazarl/goproxy v1.7.2 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.8 // indirect
 	github.com/gin-contrib/sse v1.0.0 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
@@ -49,11 +54,11 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/montanaflynn/stats v0.7.1 // indirect
 	github.com/moul/http2curl v1.0.0 // indirect
-	github.com/parnurzeal/gorequest v0.3.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
 	github.com/pierrec/lz4/v4 v4.1.21 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/segmentio/kafka-go v0.4.47 // indirect
+	github.com/smartystreets/goconvey v1.8.1 // indirect
 	github.com/swaggo/files v0.0.0-20220610200504-28940afbdbfe // indirect
 	github.com/swaggo/http-swagger v1.3.4 // indirect
 	github.com/swaggo/swag v1.16.3 // indirect
@@ -64,12 +69,12 @@ require (
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
 	golang.org/x/arch v0.13.0 // indirect
-	golang.org/x/crypto v0.32.0 // indirect
+	golang.org/x/crypto v0.33.0 // indirect
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225 // indirect
-	golang.org/x/net v0.34.0 // indirect
-	golang.org/x/sync v0.10.0 // indirect
-	golang.org/x/sys v0.29.0 // indirect
-	golang.org/x/text v0.21.0 // indirect
+	golang.org/x/net v0.35.0 // indirect
+	golang.org/x/sync v0.11.0 // indirect
+	golang.org/x/sys v0.30.0 // indirect
+	golang.org/x/text v0.22.0 // indirect
 	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d // indirect
 	google.golang.org/protobuf v1.36.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

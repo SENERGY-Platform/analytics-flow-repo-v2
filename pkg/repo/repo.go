@@ -18,6 +18,7 @@ package repo
 
 import (
 	"context"
+
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/models"
 	operator_api "github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/operator-api"
 	srv_info_hdl "github.com/SENERGY-Platform/mgw-go-service-base/srv-info-hdl"
@@ -31,14 +32,14 @@ type Repo struct {
 	operatorRepo *operator_api.Repo
 }
 
-func New(srvInfoHdl srv_info_hdl.SrvInfoHandler, perm permV2Client.Client, operatorRepo *operator_api.Repo) *Repo {
+func New(srvInfoHdl srv_info_hdl.SrvInfoHandler, perm permV2Client.Client, operatorRepo *operator_api.Repo) (*Repo, error) {
 	dbRepo := NewMongoRepo(perm)
-	dbRepo.validateFlowPermissions()
+	err := dbRepo.validateFlowPermissions()
 	return &Repo{
 		srvInfoHdl:   srvInfoHdl,
 		dbRepo:       dbRepo,
 		operatorRepo: operatorRepo,
-	}
+	}, err
 }
 
 func (r *Repo) SrvInfo(_ context.Context) srv_info_lib.SrvInfo {

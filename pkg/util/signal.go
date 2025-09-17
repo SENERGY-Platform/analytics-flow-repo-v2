@@ -29,7 +29,7 @@ func WaitForSignal(ctx context.Context, signals ...os.Signal) {
 	}
 	select {
 	case sig := <-ch:
-		Logger.Warningf("caught signal '%s'", sig)
+		StructLogger.Warn("caught signal", "signal", sig)
 		break
 	case <-ctx.Done():
 		break

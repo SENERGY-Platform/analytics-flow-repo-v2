@@ -18,6 +18,14 @@ package repo
 
 import (
 	"errors"
+	"fmt"
+	"log"
+	"maps"
+	"slices"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/models"
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/util"
 	permV2Client "github.com/SENERGY-Platform/permissions-v2/pkg/client"
@@ -26,12 +34,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"log"
-	"maps"
-	"slices"
-	"strconv"
-	"strings"
-	"time"
 )
 
 type FlowRepository interface {
@@ -66,15 +68,15 @@ func NewMongoRepo(perm permV2Client.Client) *MongoRepo {
 	return &MongoRepo{perm: perm}
 }
 
-func (r *MongoRepo) validateFlowPermissions() {
-	util.Logger.Debugf("validate flows permissions")
+func (r *MongoRepo) validateFlowPermissions() (err error) {
+	util.StructLogger.Debug("validate flows permissions")
 	resp, err := r.All("", true, map[string][]string{}, "")
 	if err != nil {
-		util.Logger.Fatal(err)
+		return
 	}
 	permResources, err, _ := r.perm.ListResourcesWithAdminPermission(permV2Client.InternalAdminToken, PermV2InstanceTopic, permV2Client.ListOptions{})
 	if err != nil {
-		util.Logger.Fatal(err)
+		return
 	}
 	permResourceMap := map[string]permV2Client.Resource{}
 	for _, permResource := range permResources {
@@ -100,7 +102,7 @@ func (r *MongoRepo) validateFlowPermissions() {
 
 		_, err, _ = r.perm.SetPermission(permV2Client.InternalAdminToken, PermV2InstanceTopic, flowId, permissions)
 		if err != nil {
-			util.Logger.Fatal(err)
+			return
 		}
 	}
 	permResourceIds := maps.Keys(permResourceMap)
@@ -109,11 +111,12 @@ func (r *MongoRepo) validateFlowPermissions() {
 		if !slices.Contains(dbIds, permResouceId) {
 			err, _ = r.perm.RemoveResource(permV2Client.InternalAdminToken, PermV2InstanceTopic, permResouceId)
 			if err != nil {
-				util.Logger.Fatal(err)
+				return
 			}
-			util.Logger.Debugf("%s exists only in permissions-v2, now deleted", permResouceId)
+			util.StructLogger.Debug(fmt.Sprintf("%s exists only in permissions-v2, now deleted", permResouceId))
 		}
 	}
+	return
 }
 
 func (r *MongoRepo) InsertFlow(flow models.Flow) (err error) {

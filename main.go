@@ -20,6 +20,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"sync"
+	"syscall"
+
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/api"
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/config"
 	operator_api "github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/operator-api"
@@ -29,9 +33,6 @@ import (
 	srv_info_hdl "github.com/SENERGY-Platform/mgw-go-service-base/srv-info-hdl"
 	sb_util "github.com/SENERGY-Platform/mgw-go-service-base/util"
 	permV2Client "github.com/SENERGY-Platform/permissions-v2/pkg/client"
-	"os"
-	"sync"
-	"syscall"
 )
 
 var version string = "dev"
@@ -66,36 +67,43 @@ func main() {
 		defer logFile.Close()
 	}
 
-	util.Logger.Printf("%s %s", srvInfoHdl.GetName(), srvInfoHdl.GetVersion())
-	util.Logger.Debugf("config: %s", sb_util.ToJsonStr(cfg))
+	util.StructLogger = util.InitStructLogger(cfg.Logger)
+
+	util.StructLogger.Info(srvInfoHdl.GetName(), "version", srvInfoHdl.GetVersion())
+	util.StructLogger.Info("config: " + sb_util.ToJsonStr(cfg))
 
 	err = repo.InitDB(cfg.MongoUrl)
 	if err != nil {
-		_, _ = fmt.Fprintln(os.Stderr, err)
+		util.StructLogger.Error("error on db init", "error", err)
 		ec = 1
 		return
 	}
-	util.Logger.Debugf("connected to database")
+	util.StructLogger.Debug("connected to database")
 	defer repo.CloseDB()
 
 	ctx, cf := context.WithCancel(context.Background())
 	var perm permV2Client.Client
 
 	if cfg.PermissionsV2Url == "mock" {
-		util.Logger.Debugf("using mock permissions")
+		util.StructLogger.Debug("using mock permissions")
 		perm, err = permV2Client.NewTestClient(ctx)
 	} else {
 		perm = permV2Client.New(cfg.PermissionsV2Url)
 	}
 	operatorRepo := operator_api.New(cfg.OperatorRepoUrl)
-	srv := repo.New(srvInfoHdl, perm, operatorRepo)
+	srv, err := repo.New(srvInfoHdl, perm, operatorRepo)
+	if err != nil {
+		util.StructLogger.Error("error on new repo", "error", err)
+		ec = 1
+		return
+	}
 
 	httpHandler, err := api.New(srv, map[string]string{
 		api.HeaderApiVer:  srvInfoHdl.GetVersion(),
 		api.HeaderSrvName: srvInfoHdl.GetName(),
 	}, cfg.URLPrefix)
 	if err != nil {
-		util.Logger.Error(err)
+		util.StructLogger.Error("error on new httpHandler", "error", err)
 		ec = 1
 		return
 	}
@@ -112,8 +120,8 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if err := util.StartServer(httpServer); err != nil {
-			util.Logger.Error(err)
+		if err = util.StartServer(httpServer); err != nil {
+			util.StructLogger.Error("error on server start", "error", err)
 			ec = 1
 		}
 		cf()
@@ -122,8 +130,8 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if err := util.StopServer(ctx, httpServer); err != nil {
-			util.Logger.Error(err)
+		if err = util.StopServer(ctx, httpServer); err != nil {
+			util.StructLogger.Error("error on server stop", "error", err)
 			ec = 1
 		}
 	}()
