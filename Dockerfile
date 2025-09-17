@@ -11,7 +11,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o app -ldflags="-X 'main.version=$VERSION
 
 FROM alpine:latest
 
-LABEL org.opencontainers.image.source https://github.com/SENERGY-Platform/analytics-flow-repo-v2
+LABEL org.opencontainers.image.source=https://github.com/SENERGY-Platform/analytics-flow-repo-v2
 
 WORKDIR /root/
 COPY --from=builder /go/src/app/app .
