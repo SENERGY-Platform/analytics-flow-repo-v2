@@ -69,7 +69,7 @@ func NewMongoRepo(perm permV2Client.Client) *MongoRepo {
 }
 
 func (r *MongoRepo) validateFlowPermissions() (err error) {
-	util.StructLogger.Debug("validate flows permissions")
+	util.Logger.Debug("validate flows permissions")
 	resp, err := r.All("", true, map[string][]string{}, "")
 	if err != nil {
 		return
@@ -113,7 +113,7 @@ func (r *MongoRepo) validateFlowPermissions() (err error) {
 			if err != nil {
 				return
 			}
-			util.StructLogger.Debug(fmt.Sprintf("%s exists only in permissions-v2, now deleted", permResouceId))
+			util.Logger.Debug(fmt.Sprintf("%s exists only in permissions-v2, now deleted", permResouceId))
 		}
 	}
 	return

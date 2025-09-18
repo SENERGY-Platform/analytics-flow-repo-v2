@@ -18,7 +18,9 @@ package api
 
 import (
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/util"
+	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/util/slog_attr"
 	gin_mw "github.com/SENERGY-Platform/gin-middleware"
+	"github.com/SENERGY-Platform/go-service-base/struct-logger/attributes"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
@@ -26,7 +28,7 @@ import (
 
 // New godoc
 // @title Analytics-Flow-Repo-V2 API
-// @version 0.0.10
+// @version 0.0.16
 // @description For the administration of analytics flows.
 // @license.name Apache-2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
@@ -42,15 +44,36 @@ func New(srv Repo, staticHeader map[string]string, urlPrefix string) (*gin.Engin
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 	}))
-	httpHandler.Use(gin_mw.StaticHeaderHandler(staticHeader), requestid.New(requestid.WithCustomHeaderStrKey(HeaderRequestID)),
-		gin_mw.LoggerHandler(util.Logger, []string{HealthCheckPath}, func(gc *gin.Context) string {
-			return requestid.Get(gc)
-		}), gin_mw.ErrorHandler(GetStatusCode, ", "), gin.Recovery())
+	var middleware []gin.HandlerFunc
+	middleware = append(
+		middleware,
+		gin_mw.StructLoggerHandler(
+			util.Logger.With(attributes.LogRecordTypeKey, attributes.HttpAccessLogRecordTypeVal),
+			attributes.Provider,
+			[]string{HealthCheckPath},
+			nil,
+			requestIDGenerator,
+		),
+	)
+	middleware = append(middleware,
+		gin_mw.StaticHeaderHandler(staticHeader),
+		requestid.New(requestid.WithCustomHeaderStrKey(HeaderRequestID)),
+		gin_mw.ErrorHandler(GetStatusCode, ", "),
+		gin_mw.StructRecoveryHandler(util.Logger, gin_mw.DefaultRecoveryFunc),
+	)
+	httpHandler.Use(middleware...)
 	httpHandler.UseRawPath = true
 	httpHandlerWithPrefix := httpHandler.Group(urlPrefix)
-	err := routes.Set(srv, httpHandlerWithPrefix, util.Logger)
+	setRoutes, err := routes.Set(srv, httpHandlerWithPrefix)
 	if err != nil {
 		return nil, err
 	}
+	for _, route := range setRoutes {
+		util.Logger.Debug("http route", attributes.MethodKey, route[0], attributes.PathKey, route[1])
+	}
 	return httpHandler, nil
+}
+
+func requestIDGenerator(gc *gin.Context) (string, any) {
+	return slog_attr.RequestIDKey, requestid.Get(gc)
 }

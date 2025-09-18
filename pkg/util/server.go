@@ -32,7 +32,7 @@ func NewServer(handler http.Handler, port int) *http.Server {
 }
 
 func StartServer(server *http.Server) error {
-	StructLogger.Info("starting http server")
+	Logger.Info("starting http server")
 	if err := server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 		return err
 	}
@@ -40,9 +40,9 @@ func StartServer(server *http.Server) error {
 }
 
 func StopServer(ctx context.Context, server *http.Server) error {
-	defer StructLogger.Info("http server halted")
+	defer Logger.Info("http server halted")
 	<-ctx.Done()
-	StructLogger.Info("stopping http server")
+	Logger.Info("stopping http server")
 	ctxWt, cf := context.WithTimeout(context.Background(), time.Second*5)
 	defer cf()
 	if err := server.Shutdown(ctxWt); err != nil {

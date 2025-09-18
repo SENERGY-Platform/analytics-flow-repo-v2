@@ -56,13 +56,13 @@ func putFlow(srv Repo) (string, string, gin.HandlerFunc) {
 	return http.MethodPut, "/flow/", func(gc *gin.Context) {
 		var request models.Flow
 		if err := gc.ShouldBindJSON(&request); err != nil {
-			util.StructLogger.Error("error creating flow", "error", err)
+			util.Logger.Error("error creating flow", "error", err)
 			_ = gc.Error(errors.New("something went wrong"))
 			return
 		}
 		err := srv.CreateFlow(request, getUserId(gc), gc.GetHeader("Authorization"))
 		if err != nil {
-			util.StructLogger.Error("error creating flow", "error", err)
+			util.Logger.Error("error creating flow", "error", err)
 			_ = gc.Error(errors.New("something went wrong"))
 			return
 		}
@@ -84,13 +84,13 @@ func postFlow(srv Repo) (string, string, gin.HandlerFunc) {
 	return http.MethodPost, "/flow/:id/", func(gc *gin.Context) {
 		var request models.Flow
 		if err := gc.ShouldBindJSON(&request); err != nil {
-			util.StructLogger.Error("error updating flow", "error", err)
+			util.Logger.Error("error updating flow", "error", err)
 			_ = gc.Error(errors.New("something went wrong"))
 			return
 		}
 		err := srv.UpdateFlow(gc.Param("id"), request, getUserId(gc), gc.GetHeader("Authorization"))
 		if err != nil {
-			util.StructLogger.Error("error updating flow", "error", err)
+			util.Logger.Error("error updating flow", "error", err)
 			_ = gc.Error(errors.New("something went wrong"))
 			return
 		}
@@ -110,7 +110,7 @@ func deleteFlow(srv Repo) (string, string, gin.HandlerFunc) {
 	return http.MethodDelete, "/flow/:id/", func(gc *gin.Context) {
 		err := srv.DeleteFlow(gc.Param("id"), getUserId(gc), gc.GetHeader("Authorization"))
 		if err != nil {
-			util.StructLogger.Error("error deleting flow", "error", err)
+			util.Logger.Error("error deleting flow", "error", err)
 			_ = gc.Error(errors.New("something went wrong"))
 			return
 		}
@@ -131,7 +131,7 @@ func getAll(srv Repo) (string, string, gin.HandlerFunc) {
 		args := gc.Request.URL.Query()
 		flows, err := srv.GetFlows(getUserId(gc), args, gc.GetHeader("Authorization"))
 		if err != nil {
-			util.StructLogger.Error("error getting flows", "error", err)
+			util.Logger.Error("error getting flows", "error", err)
 			_ = gc.Error(errors.New("something went wrong"))
 			return
 		}
@@ -152,7 +152,7 @@ func getFlow(srv Repo) (string, string, gin.HandlerFunc) {
 	return http.MethodGet, "/flow/:id", func(gc *gin.Context) {
 		flow, err := srv.GetFlow(gc.Param("id"), getUserId(gc), gc.GetHeader("Authorization"))
 		if err != nil {
-			util.StructLogger.Error("error getting flow", "error", err)
+			util.Logger.Error("error getting flow", "error", err)
 			_ = gc.Error(errors.New("something went wrong"))
 			return
 		}

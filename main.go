@@ -18,7 +18,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"sync"
@@ -29,7 +28,6 @@ import (
 	operator_api "github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/operator-api"
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/repo"
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/util"
-	sb_logger "github.com/SENERGY-Platform/go-service-base/logger"
 	srv_info_hdl "github.com/SENERGY-Platform/mgw-go-service-base/srv-info-hdl"
 	sb_util "github.com/SENERGY-Platform/mgw-go-service-base/util"
 	permV2Client "github.com/SENERGY-Platform/permissions-v2/pkg/client"
@@ -54,38 +52,25 @@ func main() {
 		return
 	}
 
-	logFile, err := util.InitLogger(cfg.Logger)
-	if err != nil {
-		_, _ = fmt.Fprintln(os.Stderr, err)
-		var logFileError *sb_logger.LogFileError
-		if errors.As(err, &logFileError) {
-			ec = 1
-			return
-		}
-	}
-	if logFile != nil {
-		defer logFile.Close()
-	}
+	util.InitStructLogger(cfg.Logger.Level)
 
-	util.StructLogger = util.InitStructLogger(cfg.Logger)
-
-	util.StructLogger.Info(srvInfoHdl.GetName(), "version", srvInfoHdl.GetVersion())
-	util.StructLogger.Info("config: " + sb_util.ToJsonStr(cfg))
+	util.Logger.Info(srvInfoHdl.GetName(), "version", srvInfoHdl.GetVersion())
+	util.Logger.Info("config: " + sb_util.ToJsonStr(cfg))
 
 	err = repo.InitDB(cfg.MongoUrl)
 	if err != nil {
-		util.StructLogger.Error("error on db init", "error", err)
+		util.Logger.Error("error on db init", "error", err)
 		ec = 1
 		return
 	}
-	util.StructLogger.Debug("connected to database")
+	util.Logger.Debug("connected to database")
 	defer repo.CloseDB()
 
 	ctx, cf := context.WithCancel(context.Background())
 	var perm permV2Client.Client
 
 	if cfg.PermissionsV2Url == "mock" {
-		util.StructLogger.Debug("using mock permissions")
+		util.Logger.Debug("using mock permissions")
 		perm, err = permV2Client.NewTestClient(ctx)
 	} else {
 		perm = permV2Client.New(cfg.PermissionsV2Url)
@@ -93,7 +78,7 @@ func main() {
 	operatorRepo := operator_api.New(cfg.OperatorRepoUrl)
 	srv, err := repo.New(srvInfoHdl, perm, operatorRepo)
 	if err != nil {
-		util.StructLogger.Error("error on new repo", "error", err)
+		util.Logger.Error("error on new repo", "error", err)
 		ec = 1
 		return
 	}
@@ -103,7 +88,7 @@ func main() {
 		api.HeaderSrvName: srvInfoHdl.GetName(),
 	}, cfg.URLPrefix)
 	if err != nil {
-		util.StructLogger.Error("error on new httpHandler", "error", err)
+		util.Logger.Error("error on new httpHandler", "error", err)
 		ec = 1
 		return
 	}
@@ -121,7 +106,7 @@ func main() {
 	go func() {
 		defer wg.Done()
 		if err = util.StartServer(httpServer); err != nil {
-			util.StructLogger.Error("error on server start", "error", err)
+			util.Logger.Error("error on server start", "error", err)
 			ec = 1
 		}
 		cf()
@@ -131,7 +116,7 @@ func main() {
 	go func() {
 		defer wg.Done()
 		if err = util.StopServer(ctx, httpServer); err != nil {
-			util.StructLogger.Error("error on server stop", "error", err)
+			util.Logger.Error("error on server stop", "error", err)
 			ec = 1
 		}
 	}()

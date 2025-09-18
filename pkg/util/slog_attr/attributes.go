@@ -14,25 +14,8 @@
  * limitations under the License.
  */
 
-package util
+package slog_attr
 
-import (
-	"context"
-	"os"
-	"os/signal"
+const (
+	RequestIDKey = "request_id"
 )
-
-func WaitForSignal(ctx context.Context, signals ...os.Signal) {
-	ch := make(chan os.Signal, 1)
-	for _, sig := range signals {
-		signal.Notify(ch, sig)
-	}
-	select {
-	case sig := <-ch:
-		Logger.Warn("caught signal", "signal", sig)
-		break
-	case <-ctx.Done():
-		break
-	}
-	signal.Stop(ch)
-}

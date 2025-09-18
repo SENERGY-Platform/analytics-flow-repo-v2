@@ -17,7 +17,6 @@
 package config
 
 import "time"
-import "github.com/y-du/go-log-level/level"
 import "github.com/SENERGY-Platform/go-service-base/config-hdl"
 
 type Config struct {
@@ -31,23 +30,14 @@ type Config struct {
 }
 
 type LoggerConfig struct {
-	Level        level.Level `json:"level" env_var:"LOGGER_LEVEL"`
-	Utc          bool        `json:"utc" env_var:"LOGGER_UTC"`
-	Path         string      `json:"path" env_var:"LOGGER_PATH"`
-	FileName     string      `json:"file_name" env_var:"LOGGER_FILE_NAME"`
-	Terminal     bool        `json:"terminal" env_var:"LOGGER_TERMINAL"`
-	Microseconds bool        `json:"microseconds" env_var:"LOGGER_MICROSECONDS"`
-	Prefix       string      `json:"prefix" env_var:"LOGGER_PREFIX"`
+	Level string `json:"level" env_var:"LOGGER_LEVEL"`
 }
 
 func New(path string) (*Config, error) {
 	cfg := Config{
 		ServerPort: 8080,
 		Logger: LoggerConfig{
-			Level:        level.Warning,
-			Utc:          true,
-			Microseconds: true,
-			Terminal:     true,
+			Level: "debug",
 		},
 		MongoUrl:         "localhost:27017",
 		HttpTimeout:      time.Second * 30,
