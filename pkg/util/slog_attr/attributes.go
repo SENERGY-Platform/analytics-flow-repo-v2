@@ -18,4 +18,6 @@ package slog_attr
 
 const (
 	RequestIDKey = "request_id"
+	UserKey      = "user"
+	HeadersKey   = "headers"
 )

@@ -28,7 +28,7 @@ import (
 
 // New godoc
 // @title Analytics-Flow-Repo-V2 API
-// @version 0.0.16
+// @version 0.0.17
 // @description For the administration of analytics flows.
 // @license.name Apache-2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
@@ -53,6 +53,7 @@ func New(srv Repo, staticHeader map[string]string, urlPrefix string) (*gin.Engin
 			[]string{HealthCheckPath},
 			nil,
 			requestIDGenerator,
+			userIdGetter,
 		),
 	)
 	middleware = append(middleware,
@@ -76,4 +77,8 @@ func New(srv Repo, staticHeader map[string]string, urlPrefix string) (*gin.Engin
 
 func requestIDGenerator(gc *gin.Context) (string, any) {
 	return slog_attr.RequestIDKey, requestid.Get(gc)
+}
+
+func userIdGetter(gc *gin.Context) (string, any) {
+	return slog_attr.UserKey, getUserId(gc)
 }
