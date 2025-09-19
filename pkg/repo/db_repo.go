@@ -200,7 +200,7 @@ func (r *MongoRepo) All(userId string, admin bool, args map[string][]string, aut
 
 	var cur *mongo.Cursor
 	var req = bson.M{}
-	var ids []primitive.ObjectID
+	ids := []primitive.ObjectID{}
 	var stringIds []string
 	if !admin {
 		stringIds, err, _ = r.perm.ListAccessibleResourceIds(auth, PermV2InstanceTopic, permV2Client.ListOptions{}, permV2Client.Read)
