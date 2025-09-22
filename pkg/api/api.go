@@ -28,7 +28,7 @@ import (
 
 // New godoc
 // @title Analytics-Flow-Repo-V2 API
-// @version 0.0.17
+// @version 0.0.18
 // @description For the administration of analytics flows.
 // @license.name Apache-2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html

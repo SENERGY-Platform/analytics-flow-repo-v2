@@ -18,12 +18,13 @@ package api
 
 import (
 	"context"
+
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/models"
-	srv_info_lib "github.com/SENERGY-Platform/mgw-go-service-base/srv-info-hdl/lib"
+	srv_info_hdl "github.com/SENERGY-Platform/go-service-base/srv-info-hdl"
 )
 
 type Repo interface {
-	SrvInfo(ctx context.Context) srv_info_lib.SrvInfo
+	SrvInfo(ctx context.Context) srv_info_hdl.ServiceInfo
 	HealthCheck(ctx context.Context) error
 	CreateFlow(flow models.Flow, userId string, authString string) (err error)
 	UpdateFlow(id string, flow models.Flow, userId string, authString string) (err error)

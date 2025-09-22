@@ -21,18 +21,17 @@ import (
 
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/models"
 	operator_api "github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/operator-api"
-	srv_info_hdl "github.com/SENERGY-Platform/mgw-go-service-base/srv-info-hdl"
-	srv_info_lib "github.com/SENERGY-Platform/mgw-go-service-base/srv-info-hdl/lib"
+	srv_info_hdl "github.com/SENERGY-Platform/go-service-base/srv-info-hdl"
 	permV2Client "github.com/SENERGY-Platform/permissions-v2/pkg/client"
 )
 
 type Repo struct {
-	srvInfoHdl   srv_info_hdl.SrvInfoHandler
+	srvInfoHdl   srv_info_hdl.Handler
 	dbRepo       FlowRepository
 	operatorRepo *operator_api.Repo
 }
 
-func New(srvInfoHdl srv_info_hdl.SrvInfoHandler, perm permV2Client.Client, operatorRepo *operator_api.Repo) (*Repo, error) {
+func New(srvInfoHdl srv_info_hdl.Handler, perm permV2Client.Client, operatorRepo *operator_api.Repo) (*Repo, error) {
 	dbRepo := NewMongoRepo(perm)
 	err := dbRepo.validateFlowPermissions()
 	return &Repo{
@@ -42,8 +41,8 @@ func New(srvInfoHdl srv_info_hdl.SrvInfoHandler, perm permV2Client.Client, opera
 	}, err
 }
 
-func (r *Repo) SrvInfo(_ context.Context) srv_info_lib.SrvInfo {
-	return r.srvInfoHdl.GetInfo()
+func (r *Repo) SrvInfo(_ context.Context) srv_info_hdl.ServiceInfo {
+	return r.srvInfoHdl.ServiceInfo()
 }
 
 func (r *Repo) HealthCheck(ctx context.Context) error {

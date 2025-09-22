@@ -8,10 +8,9 @@ require (
 	github.com/SENERGY-Platform/gin-middleware v0.9.0
 	github.com/SENERGY-Platform/go-service-base/config-hdl v1.2.0
 	github.com/SENERGY-Platform/go-service-base/logger v1.0.0
+	github.com/SENERGY-Platform/go-service-base/srv-info-hdl v0.2.0
 	github.com/SENERGY-Platform/go-service-base/struct-logger v0.4.1
-	github.com/SENERGY-Platform/mgw-go-service-base/srv-info-hdl v0.0.4
-	github.com/SENERGY-Platform/mgw-go-service-base/srv-info-hdl/lib v0.0.3
-	github.com/SENERGY-Platform/mgw-go-service-base/util v1.1.1
+	github.com/SENERGY-Platform/go-service-base/util v1.1.0
 	github.com/SENERGY-Platform/permissions-v2 v0.0.38
 	github.com/SENERGY-Platform/service-commons v0.0.0-20250903071414-1b34f1965afa
 	github.com/gin-contrib/cors v1.7.6

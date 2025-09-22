@@ -28,12 +28,12 @@ import (
 	operator_api "github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/operator-api"
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/repo"
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/util"
-	srv_info_hdl "github.com/SENERGY-Platform/mgw-go-service-base/srv-info-hdl"
-	sb_util "github.com/SENERGY-Platform/mgw-go-service-base/util"
+	"github.com/SENERGY-Platform/go-service-base/srv-info-hdl"
+	sb_util "github.com/SENERGY-Platform/go-service-base/util"
 	permV2Client "github.com/SENERGY-Platform/permissions-v2/pkg/client"
 )
 
-var version string = "dev"
+var version = "0.0.18"
 
 func main() {
 	srvInfoHdl := srv_info_hdl.New("analytics-flow-repo-v2", version)
@@ -54,7 +54,7 @@ func main() {
 
 	util.InitStructLogger(cfg.Logger.Level)
 
-	util.Logger.Info(srvInfoHdl.GetName(), "version", srvInfoHdl.GetVersion())
+	util.Logger.Info(srvInfoHdl.Name(), "version", srvInfoHdl.Version())
 	util.Logger.Info("config: " + sb_util.ToJsonStr(cfg))
 
 	err = repo.InitDB(cfg.MongoUrl)
@@ -76,7 +76,7 @@ func main() {
 		perm = permV2Client.New(cfg.PermissionsV2Url)
 	}
 	operatorRepo := operator_api.New(cfg.OperatorRepoUrl)
-	srv, err := repo.New(srvInfoHdl, perm, operatorRepo)
+	srv, err := repo.New(*srvInfoHdl, perm, operatorRepo)
 	if err != nil {
 		util.Logger.Error("error on new repo", "error", err)
 		ec = 1
@@ -84,8 +84,8 @@ func main() {
 	}
 
 	httpHandler, err := api.New(srv, map[string]string{
-		api.HeaderApiVer:  srvInfoHdl.GetVersion(),
-		api.HeaderSrvName: srvInfoHdl.GetName(),
+		api.HeaderApiVer:  srvInfoHdl.Version(),
+		api.HeaderSrvName: srvInfoHdl.Name(),
 	}, cfg.URLPrefix)
 	if err != nil {
 		util.Logger.Error("error on new httpHandler", "error", err)
