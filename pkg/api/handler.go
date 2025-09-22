@@ -20,12 +20,10 @@ import (
 	"errors"
 	"net/http"
 	"os"
-	"slices"
-	"strings"
 
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/models"
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/util"
-	"github.com/SENERGY-Platform/service-commons/pkg/jwt"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -60,7 +58,7 @@ func putFlow(srv Repo) (string, string, gin.HandlerFunc) {
 			_ = gc.Error(errors.New("something went wrong"))
 			return
 		}
-		err := srv.CreateFlow(request, getUserId(gc), gc.GetHeader("Authorization"))
+		err := srv.CreateFlow(request, gc.GetString(UserIdKey), gc.GetHeader("Authorization"))
 		if err != nil {
 			util.Logger.Error("error creating flow", "error", err)
 			_ = gc.Error(errors.New("something went wrong"))
@@ -88,7 +86,7 @@ func postFlow(srv Repo) (string, string, gin.HandlerFunc) {
 			_ = gc.Error(errors.New("something went wrong"))
 			return
 		}
-		err := srv.UpdateFlow(gc.Param("id"), request, getUserId(gc), gc.GetHeader("Authorization"))
+		err := srv.UpdateFlow(gc.Param("id"), request, gc.GetString(UserIdKey), gc.GetHeader("Authorization"))
 		if err != nil {
 			util.Logger.Error("error updating flow", "error", err)
 			_ = gc.Error(errors.New("something went wrong"))
@@ -108,7 +106,7 @@ func postFlow(srv Repo) (string, string, gin.HandlerFunc) {
 // @Router /flow/{id} [delete]
 func deleteFlow(srv Repo) (string, string, gin.HandlerFunc) {
 	return http.MethodDelete, "/flow/:id/", func(gc *gin.Context) {
-		err := srv.DeleteFlow(gc.Param("id"), getUserId(gc), gc.GetHeader("Authorization"))
+		err := srv.DeleteFlow(gc.Param("id"), gc.GetString(UserIdKey), gc.GetHeader("Authorization"))
 		if err != nil {
 			util.Logger.Error("error deleting flow", "error", err)
 			_ = gc.Error(errors.New("something went wrong"))
@@ -129,7 +127,7 @@ func deleteFlow(srv Repo) (string, string, gin.HandlerFunc) {
 func getAll(srv Repo) (string, string, gin.HandlerFunc) {
 	return http.MethodGet, "/flow", func(gc *gin.Context) {
 		args := gc.Request.URL.Query()
-		flows, err := srv.GetFlows(getUserId(gc), args, gc.GetHeader("Authorization"))
+		flows, err := srv.GetFlows(gc.GetString(UserIdKey), args, gc.GetHeader("Authorization"))
 		if err != nil {
 			util.Logger.Error("error getting flows", "error", err)
 			_ = gc.Error(errors.New("something went wrong"))
@@ -150,7 +148,7 @@ func getAll(srv Repo) (string, string, gin.HandlerFunc) {
 // @Router /flow/{id} [get]
 func getFlow(srv Repo) (string, string, gin.HandlerFunc) {
 	return http.MethodGet, "/flow/:id", func(gc *gin.Context) {
-		flow, err := srv.GetFlow(gc.Param("id"), getUserId(gc), gc.GetHeader("Authorization"))
+		flow, err := srv.GetFlow(gc.Param("id"), gc.GetString(UserIdKey), gc.GetHeader("Authorization"))
 		if err != nil {
 			util.Logger.Error("error getting flow", "error", err)
 			_ = gc.Error(errors.New("something went wrong"))
@@ -180,29 +178,4 @@ func getSwaggerDocH(_ Repo) (string, string, gin.HandlerFunc) {
 		gc.Header("Content-Type", gin.MIMEJSON)
 		gc.File("docs/swagger.json")
 	}
-}
-
-func getUserId(c *gin.Context) (userId string) {
-	forUser := c.Query("for_user")
-	if forUser != "" {
-		roles := strings.Split(c.GetHeader("X-User-Roles"), ", ")
-		if slices.Contains[[]string](roles, "admin") {
-			return forUser
-		}
-	}
-
-	userId = c.GetHeader("X-UserId")
-	if userId == "" {
-		if c.GetHeader("Authorization") != "" {
-			claims, err := jwt.Parse(c.GetHeader("Authorization"))
-			if err != nil {
-				return
-			}
-			userId = claims.Sub
-			if userId == "" {
-				userId = "dummy"
-			}
-		}
-	}
-	return
 }

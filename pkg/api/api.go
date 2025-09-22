@@ -17,10 +17,14 @@
 package api
 
 import (
+	"net/http"
+	"slices"
+	"strings"
+
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/util"
-	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/util/slog_attr"
 	gin_mw "github.com/SENERGY-Platform/gin-middleware"
 	"github.com/SENERGY-Platform/go-service-base/struct-logger/attributes"
+	"github.com/SENERGY-Platform/service-commons/pkg/jwt"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
@@ -28,7 +32,7 @@ import (
 
 // New godoc
 // @title Analytics-Flow-Repo-V2 API
-// @version 0.0.18
+// @version 0.0.19
 // @description For the administration of analytics flows.
 // @license.name Apache-2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
@@ -47,13 +51,11 @@ func New(srv Repo, staticHeader map[string]string, urlPrefix string) (*gin.Engin
 	var middleware []gin.HandlerFunc
 	middleware = append(
 		middleware,
-		gin_mw.StructLoggerHandler(
+		gin_mw.StructLoggerHandlerWithDefaultGenerators(
 			util.Logger.With(attributes.LogRecordTypeKey, attributes.HttpAccessLogRecordTypeVal),
 			attributes.Provider,
 			[]string{HealthCheckPath},
 			nil,
-			requestIDGenerator,
-			userIdGetter,
 		),
 	)
 	middleware = append(middleware,
@@ -61,6 +63,7 @@ func New(srv Repo, staticHeader map[string]string, urlPrefix string) (*gin.Engin
 		requestid.New(requestid.WithCustomHeaderStrKey(HeaderRequestID)),
 		gin_mw.ErrorHandler(GetStatusCode, ", "),
 		gin_mw.StructRecoveryHandler(util.Logger, gin_mw.DefaultRecoveryFunc),
+		AuthMiddleware(),
 	)
 	httpHandler.Use(middleware...)
 	httpHandler.UseRawPath = true
@@ -75,10 +78,38 @@ func New(srv Repo, staticHeader map[string]string, urlPrefix string) (*gin.Engin
 	return httpHandler, nil
 }
 
-func requestIDGenerator(gc *gin.Context) (string, any) {
-	return slog_attr.RequestIDKey, requestid.Get(gc)
+func AuthMiddleware() gin.HandlerFunc {
+	return func(gc *gin.Context) {
+		userId, err := getUserId(gc)
+		if err != nil {
+			util.Logger.Error("could not get user id")
+			gc.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			return
+		}
+		gc.Set(UserIdKey, userId)
+		gc.Next()
+	}
 }
 
-func userIdGetter(gc *gin.Context) (string, any) {
-	return slog_attr.UserKey, getUserId(gc)
+func getUserId(c *gin.Context) (userId string, err error) {
+	forUser := c.Query("for_user")
+	if forUser != "" {
+		roles := strings.Split(c.GetHeader("X-User-Roles"), ", ")
+		if slices.Contains[[]string](roles, "admin") {
+			return forUser, nil
+		}
+	}
+
+	userId = c.GetHeader("X-UserId")
+	if userId == "" {
+		if c.GetHeader("Authorization") != "" {
+			var claims jwt.Token
+			claims, err = jwt.Parse(c.GetHeader("Authorization"))
+			if err != nil {
+				return
+			}
+			userId = claims.Sub
+		}
+	}
+	return
 }

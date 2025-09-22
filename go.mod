@@ -5,7 +5,7 @@ go 1.24.0
 toolchain go1.24.7
 
 require (
-	github.com/SENERGY-Platform/gin-middleware v0.9.0
+	github.com/SENERGY-Platform/gin-middleware v0.10.0
 	github.com/SENERGY-Platform/go-service-base/config-hdl v1.2.0
 	github.com/SENERGY-Platform/go-service-base/logger v1.0.0
 	github.com/SENERGY-Platform/go-service-base/srv-info-hdl v0.2.0
@@ -15,7 +15,7 @@ require (
 	github.com/SENERGY-Platform/service-commons v0.0.0-20250903071414-1b34f1965afa
 	github.com/gin-contrib/cors v1.7.6
 	github.com/gin-contrib/requestid v1.0.5
-	github.com/gin-gonic/gin v1.10.1
+	github.com/gin-gonic/gin v1.11.0
 	github.com/parnurzeal/gorequest v0.3.0
 	go.mongodb.org/mongo-driver v1.17.4
 )
@@ -50,6 +50,7 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.27.0 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
+	github.com/goccy/go-yaml v1.18.0 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/golang/snappy v1.0.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
@@ -67,6 +68,8 @@ require (
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/pierrec/lz4/v4 v4.1.22 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/quic-go/qpack v0.5.1 // indirect
+	github.com/quic-go/quic-go v0.54.0 // indirect
 	github.com/segmentio/kafka-go v0.4.49 // indirect
 	github.com/smartystreets/goconvey v1.8.1 // indirect
 	github.com/swaggo/files v1.0.1 // indirect
@@ -79,6 +82,7 @@ require (
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/y-du/go-log-level v1.0.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
+	go.uber.org/mock v0.6.0 // indirect
 	golang.org/x/arch v0.21.0 // indirect
 	golang.org/x/crypto v0.42.0 // indirect
 	golang.org/x/exp v0.0.0-20250911091902-df9299821621 // indirect

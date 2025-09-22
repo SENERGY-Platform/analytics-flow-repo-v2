@@ -22,6 +22,7 @@ const (
 	HeaderSrvName       = "X-Service"
 	HeaderUserRoles     = "X-User-Roles"
 	HeaderAuthorization = "Authorization"
+	UserIdKey           = "UserId"
 )
 
 const (
