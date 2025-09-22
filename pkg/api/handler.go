@@ -32,7 +32,7 @@ import (
 // @Description	Get basic service and runtime information.
 // @Tags Info
 // @Produce	json
-// @Success	200 {object} lib.SrvInfo "info"
+// @Success	200 {object} srv_info_hdl.ServiceInfo "info"
 // @Failure	500 {string} string "error message"
 // @Router /info [get]
 func getInfoH(srv Repo) (string, string, gin.HandlerFunc) {

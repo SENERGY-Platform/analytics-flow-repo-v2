@@ -8,7 +8,7 @@
             "name": "Apache-2.0",
             "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
         },
-        "version": "0.0.17"
+        "version": "0.0.19"
     },
     "basePath": "/",
     "paths": {
@@ -187,7 +187,7 @@
                     "200": {
                         "description": "info",
                         "schema": {
-                            "$ref": "#/definitions/lib.SrvInfo"
+                            "$ref": "#/definitions/srv_info_hdl.ServiceInfo"
                         }
                     },
                     "500": {
@@ -201,40 +201,6 @@
         }
     },
     "definitions": {
-        "lib.MemStats": {
-            "type": "object",
-            "properties": {
-                "alloc": {
-                    "type": "integer"
-                },
-                "alloc_total": {
-                    "type": "integer"
-                },
-                "gc_cycles": {
-                    "type": "integer"
-                },
-                "sys_total": {
-                    "type": "integer"
-                }
-            }
-        },
-        "lib.SrvInfo": {
-            "type": "object",
-            "properties": {
-                "mem_stats": {
-                    "$ref": "#/definitions/lib.MemStats"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "up_time": {
-                    "$ref": "#/definitions/time.Duration"
-                },
-                "version": {
-                    "type": "string"
-                }
-            }
-        },
         "models.Cell": {
             "type": "object",
             "properties": {
@@ -378,48 +344,28 @@
                 }
             }
         },
-        "time.Duration": {
-            "type": "integer",
-            "enum": [
-                -9223372036854775808,
-                9223372036854775807,
-                1,
-                1000,
-                1000000,
-                1000000000,
-                60000000000,
-                3600000000000,
-                1,
-                1000,
-                1000000,
-                1000000000,
-                60000000000,
-                3600000000000,
-                1,
-                1000,
-                1000000,
-                1000000000
-            ],
-            "x-enum-varnames": [
-                "minDuration",
-                "maxDuration",
-                "Nanosecond",
-                "Microsecond",
-                "Millisecond",
-                "Second",
-                "Minute",
-                "Hour",
-                "Nanosecond",
-                "Microsecond",
-                "Millisecond",
-                "Second",
-                "Minute",
-                "Hour",
-                "Nanosecond",
-                "Microsecond",
-                "Millisecond",
-                "Second"
-            ]
+        "srv_info_hdl.ServiceInfo": {
+            "type": "object",
+            "properties": {
+                "mem_alloc": {
+                    "type": "string"
+                },
+                "mem_alloc_b": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "up_time": {
+                    "type": "string"
+                },
+                "up_time_ns": {
+                    "type": "integer"
+                },
+                "version": {
+                    "type": "string"
+                }
+            }
         }
     }
 }
