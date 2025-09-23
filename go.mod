@@ -5,7 +5,7 @@ go 1.24.0
 toolchain go1.24.7
 
 require (
-	github.com/SENERGY-Platform/gin-middleware v0.10.0
+	github.com/SENERGY-Platform/gin-middleware v0.11.0
 	github.com/SENERGY-Platform/go-service-base/config-hdl v1.2.0
 	github.com/SENERGY-Platform/go-service-base/logger v1.0.0
 	github.com/SENERGY-Platform/go-service-base/srv-info-hdl v0.2.0
