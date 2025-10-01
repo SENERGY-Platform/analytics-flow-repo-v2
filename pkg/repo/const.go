@@ -17,3 +17,7 @@
 package repo
 
 const PermV2InstanceTopic = "analytics-flows"
+
+const (
+	MessageMissingRights = "requested instance nonexistent or missing rights"
+)

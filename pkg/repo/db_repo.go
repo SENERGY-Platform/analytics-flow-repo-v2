@@ -143,7 +143,7 @@ func (r *MongoRepo) UpdateFlow(id string, flow models.Flow, userId string, auth 
 		return err
 	}
 	if !ok {
-		return errors.New("requested instance nonexistent or missing rights")
+		return errors.New(MessageMissingRights)
 	}
 
 	objID, err := primitive.ObjectIDFromHex(id)
@@ -161,7 +161,7 @@ func (r *MongoRepo) DeleteFlow(id string, userId string, admin bool, auth string
 		return err
 	}
 	if !ok {
-		return errors.New("requested instance nonexistent or missing rights")
+		return errors.New(MessageMissingRights)
 	}
 
 	objID, err := primitive.ObjectIDFromHex(id)
@@ -280,7 +280,7 @@ func (r *MongoRepo) FindFlow(id string, userId string, auth string) (flow models
 		return flow, err
 	}
 	if !ok {
-		return flow, errors.New("requested instance nonexistent or missing rights")
+		return flow, errors.New(MessageMissingRights)
 	}
 
 	err = Mongo().FindOne(CTX, bson.M{"_id": objID}).Decode(&flow)

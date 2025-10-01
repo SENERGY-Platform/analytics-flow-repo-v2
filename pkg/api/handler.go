@@ -55,13 +55,13 @@ func putFlow(srv Repo) (string, string, gin.HandlerFunc) {
 		var request models.Flow
 		if err := gc.ShouldBindJSON(&request); err != nil {
 			util.Logger.Error("error creating flow", "error", err)
-			_ = gc.Error(errors.New("something went wrong"))
+			_ = gc.Error(errors.New(MessageSomethingWrong))
 			return
 		}
 		err := srv.CreateFlow(request, gc.GetString(UserIdKey), gc.GetHeader("Authorization"))
 		if err != nil {
 			util.Logger.Error("error creating flow", "error", err)
-			_ = gc.Error(errors.New("something went wrong"))
+			_ = gc.Error(errors.New(MessageSomethingWrong))
 			return
 		}
 		gc.Status(http.StatusCreated)
@@ -83,13 +83,13 @@ func postFlow(srv Repo) (string, string, gin.HandlerFunc) {
 		var request models.Flow
 		if err := gc.ShouldBindJSON(&request); err != nil {
 			util.Logger.Error("error updating flow", "error", err)
-			_ = gc.Error(errors.New("something went wrong"))
+			_ = gc.Error(errors.New(MessageSomethingWrong))
 			return
 		}
 		err := srv.UpdateFlow(gc.Param("id"), request, gc.GetString(UserIdKey), gc.GetHeader("Authorization"))
 		if err != nil {
 			util.Logger.Error("error updating flow", "error", err)
-			_ = gc.Error(errors.New("something went wrong"))
+			_ = gc.Error(errors.New(MessageSomethingWrong))
 			return
 		}
 		gc.Status(http.StatusOK)
@@ -109,7 +109,7 @@ func deleteFlow(srv Repo) (string, string, gin.HandlerFunc) {
 		err := srv.DeleteFlow(gc.Param("id"), gc.GetString(UserIdKey), gc.GetHeader("Authorization"))
 		if err != nil {
 			util.Logger.Error("error deleting flow", "error", err)
-			_ = gc.Error(errors.New("something went wrong"))
+			_ = gc.Error(errors.New(MessageSomethingWrong))
 			return
 		}
 		gc.Status(http.StatusNoContent)
@@ -130,7 +130,7 @@ func getAll(srv Repo) (string, string, gin.HandlerFunc) {
 		flows, err := srv.GetFlows(gc.GetString(UserIdKey), args, gc.GetHeader("Authorization"))
 		if err != nil {
 			util.Logger.Error("error getting flows", "error", err)
-			_ = gc.Error(errors.New("something went wrong"))
+			_ = gc.Error(errors.New(MessageSomethingWrong))
 			return
 		}
 		gc.JSON(http.StatusOK, flows)
@@ -151,7 +151,7 @@ func getFlow(srv Repo) (string, string, gin.HandlerFunc) {
 		flow, err := srv.GetFlow(gc.Param("id"), gc.GetString(UserIdKey), gc.GetHeader("Authorization"))
 		if err != nil {
 			util.Logger.Error("error getting flow", "error", err)
-			_ = gc.Error(errors.New("something went wrong"))
+			_ = gc.Error(errors.New(MessageSomethingWrong))
 			return
 		}
 		gc.JSON(http.StatusOK, flow)

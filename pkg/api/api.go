@@ -17,6 +17,7 @@
 package api
 
 import (
+	"errors"
 	"net/http"
 	"slices"
 	"strings"
@@ -32,7 +33,7 @@ import (
 
 // New godoc
 // @title Analytics-Flow-Repo-V2 API
-// @version 0.0.19
+// @version 0.0.21
 // @description For the administration of analytics flows.
 // @license.name Apache-2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
@@ -63,12 +64,19 @@ func New(srv Repo, staticHeader map[string]string, urlPrefix string) (*gin.Engin
 		requestid.New(requestid.WithCustomHeaderStrKey(HeaderRequestID)),
 		gin_mw.ErrorHandler(GetStatusCode, ", "),
 		gin_mw.StructRecoveryHandler(util.Logger, gin_mw.DefaultRecoveryFunc),
-		AuthMiddleware(),
 	)
 	httpHandler.Use(middleware...)
 	httpHandler.UseRawPath = true
 	httpHandlerWithPrefix := httpHandler.Group(urlPrefix)
 	setRoutes, err := routes.Set(srv, httpHandlerWithPrefix)
+	if err != nil {
+		return nil, err
+	}
+	for _, route := range setRoutes {
+		util.Logger.Debug("http route", attributes.MethodKey, route[0], attributes.PathKey, route[1])
+	}
+	httpHandlerWithPrefix.Use(AuthMiddleware())
+	setRoutes, err = routesAuth.Set(srv, httpHandlerWithPrefix)
 	if err != nil {
 		return nil, err
 	}
@@ -102,13 +110,15 @@ func getUserId(c *gin.Context) (userId string, err error) {
 
 	userId = c.GetHeader("X-UserId")
 	if userId == "" {
-		if c.GetHeader("Authorization") != "" {
+		if c.GetHeader(HeaderAuthorization) != "" {
 			var claims jwt.Token
-			claims, err = jwt.Parse(c.GetHeader("Authorization"))
+			claims, err = jwt.Parse(c.GetHeader(HeaderAuthorization))
 			if err != nil {
 				return
 			}
 			userId = claims.Sub
+		} else {
+			err = errors.New("missing authorization and x-userid header")
 		}
 	}
 	return

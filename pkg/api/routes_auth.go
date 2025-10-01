@@ -18,8 +18,10 @@ package api
 
 import gin_mw "github.com/SENERGY-Platform/gin-middleware"
 
-var routes = gin_mw.Routes[Repo]{
-	getInfoH,
-	getHealthCheckH,
-	getSwaggerDocH,
+var routesAuth = gin_mw.Routes[Repo]{
+	getAll,
+	getFlow,
+	putFlow,
+	postFlow,
+	deleteFlow,
 }

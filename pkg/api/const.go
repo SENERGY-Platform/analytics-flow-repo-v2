@@ -20,11 +20,14 @@ const (
 	HeaderRequestID     = "X-Request-ID"
 	HeaderApiVer        = "X-Api-Version"
 	HeaderSrvName       = "X-Service"
-	HeaderUserRoles     = "X-User-Roles"
 	HeaderAuthorization = "Authorization"
 	UserIdKey           = "UserId"
 )
 
 const (
 	HealthCheckPath = "/health-check"
+)
+
+const (
+	MessageSomethingWrong = "something went wrong"
 )
