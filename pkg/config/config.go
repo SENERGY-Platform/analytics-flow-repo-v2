@@ -37,7 +37,7 @@ func New(path string) (*Config, error) {
 	cfg := Config{
 		ServerPort: 8080,
 		Logger: LoggerConfig{
-			Level: "debug",
+			Level: "info",
 		},
 		MongoUrl:         "localhost:27017",
 		HttpTimeout:      time.Second * 30,
