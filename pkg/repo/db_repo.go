@@ -19,7 +19,6 @@ package repo
 import (
 	"errors"
 	"fmt"
-	"log"
 	"maps"
 	"slices"
 	"strconv"
@@ -230,7 +229,6 @@ func (r *MongoRepo) All(userId string, admin bool, args map[string][]string, aut
 	}
 	cur, err = Mongo().Find(CTX, req, opt)
 	if err != nil {
-		log.Println(err)
 		return
 	}
 
@@ -253,7 +251,6 @@ func (r *MongoRepo) All(userId string, admin bool, args map[string][]string, aut
 
 	response.Total, err = Mongo().CountDocuments(CTX, req)
 	if err != nil {
-		log.Println(err)
 		return
 	}
 	response.Flows = make([]models.Flow, 0)
@@ -285,7 +282,6 @@ func (r *MongoRepo) FindFlow(id string, userId string, auth string) (flow models
 
 	err = Mongo().FindOne(CTX, bson.M{"_id": objID}).Decode(&flow)
 	if err != nil {
-		log.Println(err)
 		return
 	}
 	return
