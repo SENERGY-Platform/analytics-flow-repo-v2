@@ -187,13 +187,16 @@ func (r *MongoRepo) All(userId string, admin bool, args map[string][]string, aut
 			skip, _ := strconv.ParseInt(value[0], 10, 64)
 			opt.SetSkip(skip)
 		}
-		if arg == "order" {
+		if arg == "sort" {
 			ord := strings.Split(value[0], ":")
 			order := 1
 			if ord[1] == "desc" {
 				order = -1
 			}
-			opt.SetSort(bson.M{ord[0]: int64(order)})
+			sortFields := []string{"name"}
+			if slices.Contains(sortFields, ord[0]) {
+				opt.SetSort(bson.M{ord[0]: int64(order)})
+			}
 		}
 	}
 
@@ -232,36 +235,15 @@ func (r *MongoRepo) All(userId string, admin bool, args map[string][]string, aut
 		return
 	}
 
-	req = bson.M{}
-	if !admin {
-		req = bson.M{
-			"$or": []interface{}{
-				bson.M{"_id": bson.M{"$in": ids}},
-				bson.M{"userId": userId},
-			}}
-		if val, ok := args["search"]; ok {
-			req = bson.M{
-				"name": bson.M{"$regex": val[0]},
-				"$or": []interface{}{
-					bson.M{"_id": bson.M{"$in": ids}},
-					bson.M{"userId": userId},
-				}}
-		}
-	}
-
 	response.Total, err = Mongo().CountDocuments(CTX, req)
 	if err != nil {
 		return
 	}
 	response.Flows = make([]models.Flow, 0)
-	for cur.Next(CTX) {
-		// create a value into which the single document can be decoded
-		var elem models.Flow
-		err = cur.Decode(&elem)
-		if err != nil {
-			return
-		}
-		response.Flows = append(response.Flows, elem)
+
+	err = cur.All(CTX, &response.Flows)
+	if err != nil {
+		return models.FlowsResponse{}, err
 	}
 	return
 }
