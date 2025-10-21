@@ -8,7 +8,7 @@
             "name": "Apache-2.0",
             "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
         },
-        "version": "0.0.25"
+        "version": "0.0.26"
     },
     "basePath": "/",
     "paths": {
@@ -26,7 +26,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.FlowsResponse"
+                            "$ref": "#/definitions/lib.FlowsResponse"
                         }
                     },
                     "500": {
@@ -55,7 +55,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.Flow"
+                            "$ref": "#/definitions/lib.Flow"
                         }
                     }
                 ],
@@ -95,7 +95,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.Flow"
+                            "$ref": "#/definitions/lib.Flow"
                         }
                     },
                     "500": {
@@ -129,7 +129,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.Flow"
+                            "$ref": "#/definitions/lib.Flow"
                         }
                     }
                 ],
@@ -201,13 +201,13 @@
         }
     },
     "definitions": {
-        "models.Cell": {
+        "lib.Cell": {
             "type": "object",
             "properties": {
                 "config": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/models.ConfigValue"
+                        "$ref": "#/definitions/lib.ConfigValue"
                     }
                 },
                 "cost": {
@@ -241,20 +241,20 @@
                     }
                 },
                 "position": {
-                    "$ref": "#/definitions/models.CellPosition"
+                    "$ref": "#/definitions/lib.CellPosition"
                 },
                 "source": {
-                    "$ref": "#/definitions/models.CellLink"
+                    "$ref": "#/definitions/lib.CellLink"
                 },
                 "target": {
-                    "$ref": "#/definitions/models.CellLink"
+                    "$ref": "#/definitions/lib.CellLink"
                 },
                 "type": {
                     "type": "string"
                 }
             }
         },
-        "models.CellLink": {
+        "lib.CellLink": {
             "type": "object",
             "properties": {
                 "id": {
@@ -268,7 +268,7 @@
                 }
             }
         },
-        "models.CellPosition": {
+        "lib.CellPosition": {
             "type": "object",
             "properties": {
                 "x": {
@@ -279,7 +279,7 @@
                 }
             }
         },
-        "models.ConfigValue": {
+        "lib.ConfigValue": {
             "type": "object",
             "properties": {
                 "name": {
@@ -290,7 +290,7 @@
                 }
             }
         },
-        "models.Flow": {
+        "lib.Flow": {
             "type": "object",
             "properties": {
                 "_id": {
@@ -309,7 +309,7 @@
                     "type": "string"
                 },
                 "model": {
-                    "$ref": "#/definitions/models.Model"
+                    "$ref": "#/definitions/lib.Model"
                 },
                 "name": {
                     "type": "string"
@@ -319,13 +319,13 @@
                 }
             }
         },
-        "models.FlowsResponse": {
+        "lib.FlowsResponse": {
             "type": "object",
             "properties": {
                 "flows": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/models.Flow"
+                        "$ref": "#/definitions/lib.Flow"
                     }
                 },
                 "total": {
@@ -333,13 +333,13 @@
                 }
             }
         },
-        "models.Model": {
+        "lib.Model": {
             "type": "object",
             "properties": {
                 "cells": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/models.Cell"
+                        "$ref": "#/definitions/lib.Cell"
                     }
                 }
             }

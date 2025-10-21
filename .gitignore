@@ -2,3 +2,5 @@ config.json
 .idea
 __debug*
 .vscode
+go.work
+go.work.sum

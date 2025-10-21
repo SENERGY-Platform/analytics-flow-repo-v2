@@ -45,7 +45,7 @@ func (r *Repo) SrvInfo(_ context.Context) srv_info_hdl.ServiceInfo {
 	return r.srvInfoHdl.ServiceInfo()
 }
 
-func (r *Repo) HealthCheck(ctx context.Context) error {
+func (r *Repo) HealthCheck(_ context.Context) error {
 	return nil
 }
 

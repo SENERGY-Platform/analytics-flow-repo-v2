@@ -136,7 +136,7 @@ func (r *MongoRepo) InsertFlow(flow lib.Flow) (err error) {
 	return
 }
 
-func (r *MongoRepo) UpdateFlow(id string, flow lib.Flow, userId string, auth string) (err error) {
+func (r *MongoRepo) UpdateFlow(id string, flow lib.Flow, _ string, auth string) (err error) {
 	ok, err, _ := r.perm.CheckPermission(auth, PermV2InstanceTopic, id, permV2Client.Write)
 	if err != nil {
 		return err
@@ -154,7 +154,7 @@ func (r *MongoRepo) UpdateFlow(id string, flow lib.Flow, userId string, auth str
 	return
 }
 
-func (r *MongoRepo) DeleteFlow(id string, userId string, admin bool, auth string) (err error) {
+func (r *MongoRepo) DeleteFlow(id string, _ string, _ bool, auth string) (err error) {
 	ok, err, _ := r.perm.CheckPermission(auth, PermV2InstanceTopic, id, permV2Client.Administrate)
 	if err != nil {
 		return err
@@ -248,7 +248,7 @@ func (r *MongoRepo) All(userId string, admin bool, args map[string][]string, aut
 	return
 }
 
-func (r *MongoRepo) FindFlow(id string, userId string, auth string) (flow lib.Flow, err error) {
+func (r *MongoRepo) FindFlow(id string, _ string, auth string) (flow lib.Flow, err error) {
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return
