@@ -5,6 +5,8 @@ go 1.24.0
 toolchain go1.24.7
 
 require (
+	github.com/SENERGY-Platform/analytics-flow-repo-v2/lib v0.0.0-00010101000000-000000000000
+	github.com/SENERGY-Platform/analytics-operator-repo-v2/lib v0.0.0-20251020124033-ad259d48e929
 	github.com/SENERGY-Platform/gin-middleware v0.12.0
 	github.com/SENERGY-Platform/go-service-base/config-hdl v1.2.0
 	github.com/SENERGY-Platform/go-service-base/logger v1.0.0
@@ -75,6 +77,7 @@ require (
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/y-du/go-log-level v1.0.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
+	go.mongodb.org/mongo-driver/v2 v2.3.1 // indirect
 	go.uber.org/mock v0.6.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/arch v0.21.0 // indirect
@@ -88,3 +91,5 @@ require (
 	golang.org/x/tools v0.37.0 // indirect
 	google.golang.org/protobuf v1.36.9 // indirect
 )
+
+replace github.com/SENERGY-Platform/analytics-flow-repo-v2/lib => ./lib

@@ -19,16 +19,16 @@ package api
 import (
 	"context"
 
-	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/models"
+	"github.com/SENERGY-Platform/analytics-flow-repo-v2/lib"
 	srv_info_hdl "github.com/SENERGY-Platform/go-service-base/srv-info-hdl"
 )
 
 type Repo interface {
 	SrvInfo(ctx context.Context) srv_info_hdl.ServiceInfo
 	HealthCheck(ctx context.Context) error
-	CreateFlow(flow models.Flow, userId string, authString string) (err error)
-	UpdateFlow(id string, flow models.Flow, userId string, authString string) (err error)
+	CreateFlow(flow lib.Flow, userId string, authString string) (err error)
+	UpdateFlow(id string, flow lib.Flow, userId string, authString string) (err error)
 	DeleteFlow(id string, userId string, auth string) (err error)
-	GetFlows(userId string, args map[string][]string, auth string) (response models.FlowsResponse, err error)
-	GetFlow(flowId string, userId string, auth string) (response models.Flow, err error)
+	GetFlows(userId string, args map[string][]string, auth string) (response lib.FlowsResponse, err error)
+	GetFlow(flowId string, userId string, auth string) (response lib.Flow, err error)
 }

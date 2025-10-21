@@ -25,7 +25,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/models"
+	"github.com/SENERGY-Platform/analytics-flow-repo-v2/lib"
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/util"
 	permV2Client "github.com/SENERGY-Platform/permissions-v2/pkg/client"
 	permV2Model "github.com/SENERGY-Platform/permissions-v2/pkg/model"
@@ -36,11 +36,11 @@ import (
 )
 
 type FlowRepository interface {
-	InsertFlow(flow models.Flow) (err error)
-	UpdateFlow(id string, flow models.Flow, userId string, auth string) (err error)
+	InsertFlow(flow lib.Flow) (err error)
+	UpdateFlow(id string, flow lib.Flow, userId string, auth string) (err error)
 	DeleteFlow(id string, userId string, admin bool, auth string) (err error)
-	All(userId string, admin bool, args map[string][]string, auth string) (response models.FlowsResponse, err error)
-	FindFlow(id string, userId string, auth string) (flow models.Flow, err error)
+	All(userId string, admin bool, args map[string][]string, auth string) (response lib.FlowsResponse, err error)
+	FindFlow(id string, userId string, auth string) (flow lib.Flow, err error)
 }
 
 type MongoRepo struct {
@@ -97,7 +97,7 @@ func (r *MongoRepo) validateFlowPermissions() (err error) {
 			permissions.GroupPermissions = resource.GroupPermissions
 			permissions.RolePermissions = resource.ResourcePermissions.RolePermissions
 		}
-		models.SetDefaultPermissions(flow, permissions)
+		SetDefaultPermissions(flow, permissions)
 
 		_, err, _ = r.perm.SetPermission(permV2Client.InternalAdminToken, PermV2InstanceTopic, flowId, permissions)
 		if err != nil {
@@ -118,7 +118,7 @@ func (r *MongoRepo) validateFlowPermissions() (err error) {
 	return
 }
 
-func (r *MongoRepo) InsertFlow(flow models.Flow) (err error) {
+func (r *MongoRepo) InsertFlow(flow lib.Flow) (err error) {
 	flow.DateCreated = time.Now()
 	flow.DateUpdated = time.Now()
 	permissions := permV2Client.ResourcePermissions{
@@ -126,7 +126,7 @@ func (r *MongoRepo) InsertFlow(flow models.Flow) (err error) {
 		UserPermissions:  map[string]permV2Client.PermissionsMap{},
 		RolePermissions:  map[string]permV2Model.PermissionsMap{},
 	}
-	models.SetDefaultPermissions(flow, permissions)
+	SetDefaultPermissions(flow, permissions)
 	result, err := Mongo().InsertOne(CTX, flow)
 	id := result.InsertedID.(primitive.ObjectID).Hex()
 	if err != nil {
@@ -136,7 +136,7 @@ func (r *MongoRepo) InsertFlow(flow models.Flow) (err error) {
 	return
 }
 
-func (r *MongoRepo) UpdateFlow(id string, flow models.Flow, userId string, auth string) (err error) {
+func (r *MongoRepo) UpdateFlow(id string, flow lib.Flow, userId string, auth string) (err error) {
 	ok, err, _ := r.perm.CheckPermission(auth, PermV2InstanceTopic, id, permV2Client.Write)
 	if err != nil {
 		return err
@@ -176,7 +176,7 @@ func (r *MongoRepo) DeleteFlow(id string, userId string, admin bool, auth string
 	return
 }
 
-func (r *MongoRepo) All(userId string, admin bool, args map[string][]string, auth string) (response models.FlowsResponse, err error) {
+func (r *MongoRepo) All(userId string, admin bool, args map[string][]string, auth string) (response lib.FlowsResponse, err error) {
 	opt := options.Find()
 	for arg, value := range args {
 		if arg == "limit" {
@@ -212,7 +212,7 @@ func (r *MongoRepo) All(userId string, admin bool, args map[string][]string, aut
 		for _, id := range stringIds {
 			objID, err := primitive.ObjectIDFromHex(id)
 			if err != nil {
-				return models.FlowsResponse{}, err
+				return lib.FlowsResponse{}, err
 			}
 			ids = append(ids, objID)
 		}
@@ -239,16 +239,16 @@ func (r *MongoRepo) All(userId string, admin bool, args map[string][]string, aut
 	if err != nil {
 		return
 	}
-	response.Flows = make([]models.Flow, 0)
+	response.Flows = make([]lib.Flow, 0)
 
 	err = cur.All(CTX, &response.Flows)
 	if err != nil {
-		return models.FlowsResponse{}, err
+		return lib.FlowsResponse{}, err
 	}
 	return
 }
 
-func (r *MongoRepo) FindFlow(id string, userId string, auth string) (flow models.Flow, err error) {
+func (r *MongoRepo) FindFlow(id string, userId string, auth string) (flow lib.Flow, err error) {
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return

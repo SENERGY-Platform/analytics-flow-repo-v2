@@ -19,7 +19,7 @@ package repo
 import (
 	"context"
 
-	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/models"
+	"github.com/SENERGY-Platform/analytics-flow-repo-v2/lib"
 	operator_api "github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/operator-api"
 	srv_info_hdl "github.com/SENERGY-Platform/go-service-base/srv-info-hdl"
 	permV2Client "github.com/SENERGY-Platform/permissions-v2/pkg/client"
@@ -49,7 +49,7 @@ func (r *Repo) HealthCheck(ctx context.Context) error {
 	return nil
 }
 
-func (r *Repo) CreateFlow(flow models.Flow, userId string, auth string) (err error) {
+func (r *Repo) CreateFlow(flow lib.Flow, userId string, auth string) (err error) {
 	err = r.validateOperators(&flow, userId, auth)
 	if err != nil {
 		return
@@ -58,7 +58,7 @@ func (r *Repo) CreateFlow(flow models.Flow, userId string, auth string) (err err
 	return r.dbRepo.InsertFlow(flow)
 }
 
-func (r *Repo) UpdateFlow(id string, flow models.Flow, userId string, auth string) (err error) {
+func (r *Repo) UpdateFlow(id string, flow lib.Flow, userId string, auth string) (err error) {
 	err = r.validateOperators(&flow, userId, auth)
 	if err != nil {
 		return
@@ -66,7 +66,7 @@ func (r *Repo) UpdateFlow(id string, flow models.Flow, userId string, auth strin
 	return r.dbRepo.UpdateFlow(id, flow, userId, auth)
 }
 
-func (r *Repo) validateOperators(flow *models.Flow, userId string, auth string) error {
+func (r *Repo) validateOperators(flow *lib.Flow, userId string, auth string) error {
 	for i, operator := range flow.Model.Cells {
 		if operator.Type == "senergy.NodeElement" {
 			op, err := r.operatorRepo.GetOperator(*operator.OperatorId, userId, auth)
@@ -89,10 +89,10 @@ func (r *Repo) DeleteFlow(id string, userId string, auth string) (err error) {
 	return r.dbRepo.DeleteFlow(id, userId, false, auth)
 }
 
-func (r *Repo) GetFlows(userId string, args map[string][]string, auth string) (response models.FlowsResponse, err error) {
+func (r *Repo) GetFlows(userId string, args map[string][]string, auth string) (response lib.FlowsResponse, err error) {
 	return r.dbRepo.All(userId, false, args, auth)
 }
 
-func (r *Repo) GetFlow(flowId string, userId string, auth string) (response models.Flow, err error) {
+func (r *Repo) GetFlow(flowId string, userId string, auth string) (response lib.Flow, err error) {
 	return r.dbRepo.FindFlow(flowId, userId, auth)
 }

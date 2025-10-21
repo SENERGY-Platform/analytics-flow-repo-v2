@@ -19,9 +19,11 @@ package operator_api
 import (
 	"encoding/json"
 	"errors"
-	"github.com/parnurzeal/gorequest"
 	"net/http"
 	"strconv"
+
+	operator_repo "github.com/SENERGY-Platform/analytics-operator-repo-v2/lib"
+	"github.com/parnurzeal/gorequest"
 )
 
 type Repo struct {
@@ -32,7 +34,7 @@ func New(url string) *Repo {
 	return &Repo{url}
 }
 
-func (a Repo) GetOperator(id string, userId string, authorization string) (o Operator, err error) {
+func (a Repo) GetOperator(id string, userId string, authorization string) (o operator_repo.Operator, err error) {
 	request := gorequest.New()
 	request.Get(a.url+"/operator/"+id).Set("X-UserId", userId).Set("Authorization", authorization)
 	resp, body, e := request.End()

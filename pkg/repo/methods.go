@@ -14,30 +14,18 @@
  * limitations under the License.
  */
 
-package api
+package repo
 
 import (
-	"errors"
-	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/models"
-	"net/http"
+	"github.com/SENERGY-Platform/analytics-flow-repo-v2/lib"
+	permV2Client "github.com/SENERGY-Platform/permissions-v2/pkg/client"
 )
 
-func GetStatusCode(err error) int {
-	var nfe *models.NotFoundError
-	if errors.As(err, &nfe) {
-		return http.StatusNotFound
+func SetDefaultPermissions(instance lib.Flow, permissions permV2Client.ResourcePermissions) {
+	permissions.UserPermissions[instance.UserId] = permV2Client.PermissionsMap{
+		Read:         true,
+		Write:        true,
+		Execute:      true,
+		Administrate: true,
 	}
-	var iie *models.InvalidInputError
-	if errors.As(err, &iie) {
-		return http.StatusBadRequest
-	}
-	var ie *models.InternalError
-	if errors.As(err, &ie) {
-		return http.StatusInternalServerError
-	}
-	var rbe *models.ResourceBusyError
-	if errors.As(err, &rbe) {
-		return http.StatusConflict
-	}
-	return 0
 }

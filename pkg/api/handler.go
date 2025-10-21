@@ -21,7 +21,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/models"
+	"github.com/SENERGY-Platform/analytics-flow-repo-v2/lib"
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/util"
 
 	"github.com/gin-gonic/gin"
@@ -45,14 +45,14 @@ func getInfoH(srv Repo) (string, string, gin.HandlerFunc) {
 // @Summary Create flow
 // @Description	Validates and stores a flow
 // @Tags Flow
-// @Param flow body models.Flow	true "Create flow"
+// @Param flow body lib.Flow	true "Create flow"
 // @Accept       json
 // @Success	201
 // @Failure	500 {string} str
 // @Router /flow/ [put]
 func putFlow(srv Repo) (string, string, gin.HandlerFunc) {
 	return http.MethodPut, "/flow/", func(gc *gin.Context) {
-		var request models.Flow
+		var request lib.Flow
 		if err := gc.ShouldBindJSON(&request); err != nil {
 			util.Logger.Error("error creating flow", "error", err)
 			_ = gc.Error(errors.New(MessageSomethingWrong))
@@ -74,13 +74,13 @@ func putFlow(srv Repo) (string, string, gin.HandlerFunc) {
 // @Tags Flow
 // @Accept       json
 // @Param id path string true "Flow ID"
-// @Param flow body models.Flow	true "Update flow"
+// @Param flow body lib.Flow	true "Update flow"
 // @Success	200
 // @Failure	500 {string} str
 // @Router /flow/{id} [post]
 func postFlow(srv Repo) (string, string, gin.HandlerFunc) {
 	return http.MethodPost, "/flow/:id/", func(gc *gin.Context) {
-		var request models.Flow
+		var request lib.Flow
 		if err := gc.ShouldBindJSON(&request); err != nil {
 			util.Logger.Error("error updating flow", "error", err)
 			_ = gc.Error(errors.New(MessageSomethingWrong))
@@ -121,7 +121,7 @@ func deleteFlow(srv Repo) (string, string, gin.HandlerFunc) {
 // @Description	Gets all flows
 // @Tags Flow
 // @Produce json
-// @Success	200 {object} models.FlowsResponse
+// @Success	200 {object} lib.FlowsResponse
 // @Failure	500 {string} str
 // @Router /flow [get]
 func getAll(srv Repo) (string, string, gin.HandlerFunc) {
@@ -143,7 +143,7 @@ func getAll(srv Repo) (string, string, gin.HandlerFunc) {
 // @Tags Flow
 // @Produce json
 // @Param id path string true "Flow ID"
-// @Success	200 {object} models.Flow
+// @Success	200 {object} lib.Flow
 // @Failure	500 {string} str
 // @Router /flow/{id} [get]
 func getFlow(srv Repo) (string, string, gin.HandlerFunc) {
