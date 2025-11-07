@@ -172,7 +172,7 @@ func (r *MongoRepo) DeleteFlow(id string, _ string, _ bool, auth string) (err er
 	if res.Err() != nil {
 		return res.Err()
 	}
-	err, _ = r.perm.RemoveResource(auth, PermV2InstanceTopic, id)
+	err, _ = r.perm.RemoveResource(permV2Client.InternalAdminToken, PermV2InstanceTopic, id)
 	return
 }
 
