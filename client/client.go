@@ -38,8 +38,8 @@ func doNoDecode(req *http.Request, token string, userId string) (resp *http.Resp
 	if err != nil {
 		return resp, http.StatusInternalServerError, err
 	}
-	defer resp.Body.Close()
 	if resp.StatusCode > 299 {
+		defer resp.Body.Close()
 		temp, _ := io.ReadAll(resp.Body) //read error response end ensure that resp.Body is read to EOF
 		return resp, resp.StatusCode, fmt.Errorf("unexpected statuscode %v: %v", resp.StatusCode, string(temp))
 	}
@@ -51,6 +51,7 @@ func do[T any](req *http.Request, token string, userId string) (result T, code i
 	if err != nil {
 		return result, code, err
 	}
+	defer resp.Body.Close()
 	err = json.NewDecoder(resp.Body).Decode(&result)
 	if err != nil {
 		_, _ = io.ReadAll(resp.Body) //ensure resp.Body is read to EOF
