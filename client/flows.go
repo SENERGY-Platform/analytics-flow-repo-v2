@@ -62,7 +62,7 @@ func (c *Client) UpdateFlow(token string, userId string, flow lib.Flow) (code in
 	if err != nil {
 		return http.StatusBadRequest, err
 	}
-	req, err := http.NewRequest(http.MethodPost, c.baseUrl+"/flow/"+flow.Id.Hex(), bytes.NewBuffer(b))
+	req, err := http.NewRequest(http.MethodPost, c.baseUrl+"/flow/"+flow.Id.Hex()+"/", bytes.NewBuffer(b))
 	if err != nil {
 		return http.StatusBadRequest, err
 	}
@@ -71,7 +71,7 @@ func (c *Client) UpdateFlow(token string, userId string, flow lib.Flow) (code in
 }
 
 func (c *Client) DeleteFlow(token string, userId string, id string) (code int, err error) {
-	req, err := http.NewRequest(http.MethodDelete, c.baseUrl+"/flow/"+id, nil)
+	req, err := http.NewRequest(http.MethodDelete, c.baseUrl+"/flow/"+id+"/", nil)
 	if err != nil {
 		return http.StatusBadRequest, err
 	}

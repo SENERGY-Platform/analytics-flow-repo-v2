@@ -105,7 +105,9 @@
                         }
                     }
                 }
-            },
+            }
+        },
+        "/flow/{id}/": {
             "post": {
                 "description": "Validates and updates a flow",
                 "consumes": [

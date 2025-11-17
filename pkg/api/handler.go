@@ -77,7 +77,7 @@ func putFlow(srv Repo) (string, string, gin.HandlerFunc) {
 // @Param flow body lib.Flow	true "Update flow"
 // @Success	200
 // @Failure	500 {string} str
-// @Router /flow/{id} [post]
+// @Router /flow/{id}/ [post]
 func postFlow(srv Repo) (string, string, gin.HandlerFunc) {
 	return http.MethodPost, "/flow/:id/", func(gc *gin.Context) {
 		var request lib.Flow
@@ -103,7 +103,7 @@ func postFlow(srv Repo) (string, string, gin.HandlerFunc) {
 // @Param id path string true "Flow ID"
 // @Success	204
 // @Failure	500 {string} str
-// @Router /flow/{id} [delete]
+// @Router /flow/{id}/ [delete]
 func deleteFlow(srv Repo) (string, string, gin.HandlerFunc) {
 	return http.MethodDelete, "/flow/:id/", func(gc *gin.Context) {
 		err := srv.DeleteFlow(gc.Param("id"), gc.GetString(UserIdKey), gc.GetHeader("Authorization"))
