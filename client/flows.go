@@ -62,7 +62,7 @@ func (c *Client) UpdateFlow(token string, userId string, flow lib.Flow) (code in
 	if err != nil {
 		return http.StatusBadRequest, err
 	}
-	req, err := http.NewRequest(http.MethodPost, c.baseUrl+"/flow/"+flow.Id.String(), bytes.NewBuffer(b))
+	req, err := http.NewRequest(http.MethodPost, c.baseUrl+"/flow/"+flow.Id.Hex(), bytes.NewBuffer(b))
 	if err != nil {
 		return http.StatusBadRequest, err
 	}
