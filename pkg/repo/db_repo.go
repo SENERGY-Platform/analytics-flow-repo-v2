@@ -221,13 +221,11 @@ func (r *MongoRepo) All(userId string, admin bool, args map[string][]string, aut
 				bson.M{"_id": bson.M{"$in": ids}},
 				bson.M{"userId": userId},
 			}}
-		if val, ok := args["search"]; ok {
-			req = bson.M{
-				"name": bson.M{"$regex": val[0]},
-				"$or": []interface{}{
-					bson.M{"_id": bson.M{"$in": ids}},
-					bson.M{"userId": userId},
-				}}
+	}
+	if val, ok := args["search"]; ok {
+		req["name"] = bson.M{
+			"$regex":   val[0],
+			"$options": "i",
 		}
 	}
 	cur, err = Mongo().Find(CTX, req, opt)
