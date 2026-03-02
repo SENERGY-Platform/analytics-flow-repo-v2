@@ -31,4 +31,5 @@ type Repo interface {
 	DeleteFlow(id string, userId string, auth string) (err error)
 	GetFlows(userId string, args map[string][]string, auth string) (response lib.FlowsResponse, err error)
 	GetFlow(flowId string, userId string, auth string) (response lib.Flow, err error)
+	GetOperatorUsage() ([]lib.OperatorFlowCount, error)
 }

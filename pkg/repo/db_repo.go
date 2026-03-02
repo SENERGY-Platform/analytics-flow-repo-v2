@@ -41,6 +41,7 @@ type FlowRepository interface {
 	DeleteFlow(id string, userId string, admin bool, auth string) (err error)
 	All(userId string, admin bool, args map[string][]string, auth string) (response lib.FlowsResponse, err error)
 	FindFlow(id string, userId string, auth string) (flow lib.Flow, err error)
+	GetOperatorFlowMapping() ([]lib.OperatorFlowCount, error)
 }
 
 type MongoRepo struct {
@@ -268,4 +269,38 @@ func (r *MongoRepo) FindFlow(id string, _ string, auth string) (flow lib.Flow, e
 		return
 	}
 	return
+}
+
+func (r *MongoRepo) GetOperatorFlowMapping() ([]lib.OperatorFlowCount, error) {
+	pipeline := mongo.Pipeline{
+		{{"$unwind", "$model.cells"}},
+		{{"$match", bson.D{{"model.cells.type", "senergy.NodeElement"}}}},
+		{{"$group", bson.D{
+			{"_id", bson.D{
+				{"flowId", "$_id"},
+				{"operatorId", "$model.cells.operatorid"},
+			}},
+			{"count", bson.D{{"$sum", 1}}},
+		}}},
+		{{"$group", bson.D{
+			{"_id", "$_id.operatorId"},
+			{"flows", bson.D{{"$push", bson.D{
+				{"flowId", "$_id.flowId"},
+				{"count", "$count"},
+			}}}},
+		}}},
+	}
+
+	cursor, err := Mongo().Aggregate(CTX, pipeline)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(CTX)
+
+	var results []lib.OperatorFlowCount
+	if err = cursor.All(CTX, &results); err != nil {
+		return nil, err
+	}
+
+	return results, nil
 }

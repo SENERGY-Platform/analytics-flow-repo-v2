@@ -23,3 +23,15 @@ var routes = gin_mw.Routes[Repo]{
 	getHealthCheckH,
 	getSwaggerDocH,
 }
+
+var routesAuth = gin_mw.Routes[Repo]{
+	getAll,
+	getFlow,
+	putFlow,
+	postFlow,
+	deleteFlow,
+}
+
+var routesAdmin = gin_mw.Routes[Repo]{
+	getOperatorUsageAdmin,
+}

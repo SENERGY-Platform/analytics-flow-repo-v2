@@ -96,3 +96,7 @@ func (r *Repo) GetFlows(userId string, args map[string][]string, auth string) (r
 func (r *Repo) GetFlow(flowId string, userId string, auth string) (response lib.Flow, err error) {
 	return r.dbRepo.FindFlow(flowId, userId, auth)
 }
+
+func (r *Repo) GetOperatorUsage() ([]lib.OperatorFlowCount, error) {
+	return r.dbRepo.GetOperatorFlowMapping()
+}

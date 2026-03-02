@@ -158,6 +158,18 @@ func getFlow(srv Repo) (string, string, gin.HandlerFunc) {
 	}
 }
 
+func getOperatorUsageAdmin(srv Repo) (string, string, gin.HandlerFunc) {
+	return http.MethodGet, "/admin/statistics/operator-usage", func(gc *gin.Context) {
+		data, err := srv.GetOperatorUsage()
+		if err != nil {
+			util.Logger.Error("error getting operator usage", "error", err)
+			_ = gc.Error(errors.New(MessageSomethingWrong))
+			return
+		}
+		gc.JSON(http.StatusOK, data)
+	}
+}
+
 func getHealthCheckH(srv Repo) (string, string, gin.HandlerFunc) {
 	return http.MethodGet, HealthCheckPath, func(gc *gin.Context) {
 		err := srv.HealthCheck(gc.Request.Context())

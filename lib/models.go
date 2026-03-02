@@ -72,3 +72,13 @@ type ConfigValue struct {
 	Name string `json:"name,omitempty"`
 	Type string `json:"type,omitempty"`
 }
+
+type OperatorFlowCount struct {
+	OperatorID string      `bson:"_id"`
+	Flows      []FlowCount `bson:"flows"`
+}
+
+type FlowCount struct {
+	FlowID *primitive.ObjectID `bson:"flowId"`
+	Count  int32               `bson:"count"`
+}
