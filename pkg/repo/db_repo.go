@@ -179,6 +179,20 @@ func (r *MongoRepo) DeleteFlow(id string, _ string, _ bool, auth string) (err er
 func (r *MongoRepo) All(userId string, admin bool, args map[string][]string, auth string) (response lib.FlowsResponse, err error) {
 	opt := options.Find()
 	for arg, value := range args {
+		if arg == "sort" && len(value) > 0 {
+			sortFields := []string{"name", "dateCreated", "dateUpdated"}
+			ord := strings.SplitN(value[0], ":", 2)
+			if len(ord) == 2 {
+				field, dir := ord[0], ord[1]
+				if slices.Contains(sortFields, field) {
+					order := int64(1)
+					if dir == "desc" {
+						order = -1
+					}
+					opt.SetSort(bson.M{field: order})
+				}
+			}
+		}
 		if arg == "limit" {
 			limit, _ := strconv.ParseInt(value[0], 10, 64)
 			opt.SetLimit(limit)
@@ -186,17 +200,6 @@ func (r *MongoRepo) All(userId string, admin bool, args map[string][]string, aut
 		if arg == "offset" {
 			skip, _ := strconv.ParseInt(value[0], 10, 64)
 			opt.SetSkip(skip)
-		}
-		if arg == "sort" {
-			ord := strings.Split(value[0], ":")
-			order := 1
-			if ord[1] == "desc" {
-				order = -1
-			}
-			sortFields := []string{"name"}
-			if slices.Contains(sortFields, ord[0]) {
-				opt.SetSort(bson.M{ord[0]: int64(order)})
-			}
 		}
 	}
 
