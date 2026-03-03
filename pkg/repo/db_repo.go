@@ -330,7 +330,12 @@ func (r *MongoRepo) GetOperatorFlowMapping() ([]lib.OperatorFlowCount, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer cursor.Close(CTX)
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err = cursor.Close(ctx)
+		if err != nil {
+			return
+		}
+	}(cursor, CTX)
 
 	var results []lib.OperatorFlowCount
 	if err = cursor.All(CTX, &results); err != nil {
