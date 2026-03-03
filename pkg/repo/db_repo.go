@@ -203,18 +203,20 @@ func (r *MongoRepo) All(userId string, admin bool, args map[string][]string, aut
 		case "limit":
 			var limit int64
 			limit, err = strconv.ParseInt(value[0], 10, 64)
-			if err == nil && limit > 0 {
-				opt.SetLimit(limit)
-			} else {
+			if err != nil {
 				return
+			}
+			if limit > 0 {
+				opt.SetLimit(limit)
 			}
 		case "offset":
 			var skip int64
 			skip, err = strconv.ParseInt(value[0], 10, 64)
-			if err == nil && skip > 0 {
-				opt.SetSkip(skip)
-			} else {
+			if err != nil {
 				return
+			}
+			if skip > 0 {
+				opt.SetSkip(skip)
 			}
 		}
 	}
@@ -251,6 +253,47 @@ func (r *MongoRepo) All(userId string, admin bool, args map[string][]string, aut
 				"$options": "i",
 			},
 		})
+	}
+
+	if vals, ok := args["filter"]; ok {
+		for _, raw := range vals {
+			for _, f := range strings.Split(raw, "|") {
+
+				parts := strings.SplitN(f, ":", 2)
+				if len(parts) != 2 {
+					continue
+				}
+
+				key := parts[0]
+				values := strings.Split(parts[1], ",")
+				if len(values) == 0 {
+					continue
+				}
+
+				switch key {
+
+				case "operator":
+					andFilters = append(andFilters, bson.M{
+						"model.cells": bson.M{
+							"$elemMatch": bson.M{
+								"type":       "senergy.NodeElement",
+								"operatorid": bson.M{"$in": values},
+							},
+						},
+					})
+
+				default:
+					fieldMap := map[string]string{}
+					field, exists := fieldMap[key]
+					if !exists {
+						continue
+					}
+					andFilters = append(andFilters, bson.M{
+						field: bson.M{"$in": values},
+					})
+				}
+			}
+		}
 	}
 
 	req := bson.M{}
