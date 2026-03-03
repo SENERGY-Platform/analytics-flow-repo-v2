@@ -17,9 +17,11 @@
 package repo
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"maps"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -180,7 +182,12 @@ func (r *MongoRepo) DeleteFlow(id string, _ string, _ bool, auth string) (err er
 func (r *MongoRepo) All(userId string, admin bool, args map[string][]string, auth string) (response lib.FlowsResponse, err error) {
 	opt := options.Find()
 	for arg, value := range args {
-		if arg == "sort" && len(value) > 0 {
+		if len(value) == 0 {
+			continue
+		}
+
+		switch arg {
+		case "sort":
 			sortFields := []string{"name", "dateCreated", "dateUpdated"}
 			ord := strings.SplitN(value[0], ":", 2)
 			if len(ord) == 2 {
@@ -193,19 +200,27 @@ func (r *MongoRepo) All(userId string, admin bool, args map[string][]string, aut
 					opt.SetSort(bson.M{field: order})
 				}
 			}
-		}
-		if arg == "limit" {
-			limit, _ := strconv.ParseInt(value[0], 10, 64)
-			opt.SetLimit(limit)
-		}
-		if arg == "offset" {
-			skip, _ := strconv.ParseInt(value[0], 10, 64)
-			opt.SetSkip(skip)
+		case "limit":
+			var limit int64
+			limit, err = strconv.ParseInt(value[0], 10, 64)
+			if err == nil && limit > 0 {
+				opt.SetLimit(limit)
+			} else {
+				return
+			}
+		case "offset":
+			var skip int64
+			skip, err = strconv.ParseInt(value[0], 10, 64)
+			if err == nil && skip > 0 {
+				opt.SetSkip(skip)
+			} else {
+				return
+			}
 		}
 	}
 
-	var cur *mongo.Cursor
-	var req = bson.M{}
+	andFilters := bson.A{}
+
 	ids := []primitive.ObjectID{}
 	var stringIds []string
 	if !admin {
@@ -220,18 +235,31 @@ func (r *MongoRepo) All(userId string, admin bool, args map[string][]string, aut
 			}
 			ids = append(ids, objID)
 		}
-		req = bson.M{
-			"$or": []interface{}{
+
+		andFilters = append(andFilters, bson.M{
+			"$or": bson.A{
 				bson.M{"_id": bson.M{"$in": ids}},
-				bson.M{"userId": userId},
-			}}
+				bson.M{"userid": userId},
+			},
+		})
 	}
-	if val, ok := args["search"]; ok {
-		req["name"] = bson.M{
-			"$regex":   val[0],
-			"$options": "i",
-		}
+	if val, ok := args["search"]; ok && len(val) > 0 {
+		pattern := regexp.QuoteMeta(val[0])
+		andFilters = append(andFilters, bson.M{
+			"name": bson.M{
+				"$regex":   pattern,
+				"$options": "i",
+			},
+		})
 	}
+
+	req := bson.M{}
+	if len(andFilters) > 0 {
+		req["$and"] = andFilters
+	}
+
+	var cur *mongo.Cursor
+
 	cur, err = Mongo().Find(CTX, req, opt)
 	if err != nil {
 		return
@@ -244,6 +272,13 @@ func (r *MongoRepo) All(userId string, admin bool, args map[string][]string, aut
 	response.Flows = make([]lib.Flow, 0)
 
 	err = cur.All(CTX, &response.Flows)
+	defer func(cur *mongo.Cursor, ctx context.Context) {
+		err := cur.Close(ctx)
+		if err != nil {
+			return
+		}
+	}(cur, CTX)
+
 	if err != nil {
 		return lib.FlowsResponse{}, err
 	}
