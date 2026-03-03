@@ -67,6 +67,7 @@ func main() {
 	defer repo.CloseDB()
 
 	ctx, cf := context.WithCancel(context.Background())
+	defer cf()
 	var perm permV2Client.Client
 
 	if cfg.PermissionsV2Url == "mock" {

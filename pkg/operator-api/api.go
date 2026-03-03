@@ -34,7 +34,7 @@ func New(url string) *Repo {
 	return &Repo{url}
 }
 
-func (a Repo) GetOperator(id string, userId string, authorization string) (o operator_repo.Operator, err error) {
+func (a Repo) GetOperator(id, userId, authorization string) (o operator_repo.Operator, err error) {
 	request := gorequest.New()
 	request.Get(a.url+"/operator/"+id).Set("X-UserId", userId).Set("Authorization", authorization)
 	resp, body, e := request.End()

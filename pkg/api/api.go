@@ -70,28 +70,27 @@ func New(srv Repo, staticHeader map[string]string, urlPrefix string) (*gin.Engin
 	httpHandler.Use(middleware...)
 	httpHandler.UseRawPath = true
 	httpHandlerWithPrefix := httpHandler.Group(urlPrefix)
+	allRoutes := make([][2]string, 0)
 	setRoutes, err := routes.Set(srv, httpHandlerWithPrefix)
+	allRoutes = append(allRoutes, setRoutes...)
 	if err != nil {
 		return nil, err
 	}
-	for _, route := range setRoutes {
-		util.Logger.Debug("http route", attributes.MethodKey, route[0], attributes.PathKey, route[1])
-	}
+
 	httpHandlerWithPrefix.Use(AuthMiddleware())
 	setRoutes, err = routesAuth.Set(srv, httpHandlerWithPrefix)
+	allRoutes = append(allRoutes, setRoutes...)
 	if err != nil {
 		return nil, err
-	}
-	for _, route := range setRoutes {
-		util.Logger.Debug("http route", attributes.MethodKey, route[0], attributes.PathKey, route[1])
 	}
 
 	httpHandlerWithPrefix.Use(AdminMiddleware())
 	setRoutes, err = routesAdmin.Set(srv, httpHandlerWithPrefix)
+	allRoutes = append(allRoutes, setRoutes...)
 	if err != nil {
 		return nil, err
 	}
-	for _, route := range setRoutes {
+	for _, route := range allRoutes {
 		util.Logger.Debug("http route", attributes.MethodKey, route[0], attributes.PathKey, route[1])
 	}
 	return httpHandler, nil

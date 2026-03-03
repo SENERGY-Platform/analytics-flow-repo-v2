@@ -85,7 +85,7 @@ func (r *Repo) validateOperators(flow *lib.Flow, userId string, auth string) err
 	return nil
 }
 
-func (r *Repo) DeleteFlow(id string, userId string, auth string) (err error) {
+func (r *Repo) DeleteFlow(id, userId, auth string) (err error) {
 	return r.dbRepo.DeleteFlow(id, userId, false, auth)
 }
 
@@ -93,7 +93,7 @@ func (r *Repo) GetFlows(userId string, args map[string][]string, auth string) (r
 	return r.dbRepo.All(userId, false, args, auth)
 }
 
-func (r *Repo) GetFlow(flowId string, userId string, auth string) (response lib.Flow, err error) {
+func (r *Repo) GetFlow(flowId, userId, auth string) (response lib.Flow, err error) {
 	return r.dbRepo.FindFlow(flowId, userId, auth)
 }
 

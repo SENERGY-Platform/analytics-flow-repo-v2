@@ -25,16 +25,18 @@ import (
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/lib"
 )
 
-func (c *Client) GetFlows(token string, userId string) (resp lib.FlowsResponse, code int, err error) {
-	req, err := http.NewRequest(http.MethodGet, c.baseUrl+"/flow", nil)
+const FlowPath = "/flow"
+
+func (c *Client) GetFlows(token, userId string) (resp lib.FlowsResponse, code int, err error) {
+	req, err := http.NewRequest(http.MethodGet, c.baseUrl+FlowPath, nil)
 	if err != nil {
 		return resp, http.StatusBadRequest, err
 	}
 	return do[lib.FlowsResponse](req, token, userId)
 }
 
-func (c *Client) GetFlow(token string, userId string, id string) (flow lib.Flow, code int, err error) {
-	req, err := http.NewRequest(http.MethodGet, c.baseUrl+"/flow/"+id, nil)
+func (c *Client) GetFlow(token, userId, id string) (flow lib.Flow, code int, err error) {
+	req, err := http.NewRequest(http.MethodGet, c.baseUrl+FlowPath+"/"+id, nil)
 	if err != nil {
 		return flow, http.StatusBadRequest, err
 	}
@@ -46,7 +48,7 @@ func (c *Client) CreateFlow(token string, userId string, flow lib.Flow) (code in
 	if err != nil {
 		return http.StatusBadRequest, err
 	}
-	req, err := http.NewRequest(http.MethodPut, c.baseUrl+"/flow/", bytes.NewBuffer(b))
+	req, err := http.NewRequest(http.MethodPut, c.baseUrl+FlowPath+"/", bytes.NewBuffer(b))
 	if err != nil {
 		return http.StatusBadRequest, err
 	}
@@ -62,7 +64,7 @@ func (c *Client) UpdateFlow(token string, userId string, flow lib.Flow) (code in
 	if err != nil {
 		return http.StatusBadRequest, err
 	}
-	req, err := http.NewRequest(http.MethodPost, c.baseUrl+"/flow/"+flow.Id.Hex()+"/", bytes.NewBuffer(b))
+	req, err := http.NewRequest(http.MethodPost, c.baseUrl+FlowPath+"/"+flow.Id.Hex()+"/", bytes.NewBuffer(b))
 	if err != nil {
 		return http.StatusBadRequest, err
 	}
@@ -70,8 +72,8 @@ func (c *Client) UpdateFlow(token string, userId string, flow lib.Flow) (code in
 	return code, err
 }
 
-func (c *Client) DeleteFlow(token string, userId string, id string) (code int, err error) {
-	req, err := http.NewRequest(http.MethodDelete, c.baseUrl+"/flow/"+id+"/", nil)
+func (c *Client) DeleteFlow(token, userId, id string) (code int, err error) {
+	req, err := http.NewRequest(http.MethodDelete, c.baseUrl+FlowPath+"/"+id+"/", nil)
 	if err != nil {
 		return http.StatusBadRequest, err
 	}

@@ -42,7 +42,7 @@ type FlowRepository interface {
 	UpdateFlow(id string, flow lib.Flow, userId string, auth string) (err error)
 	DeleteFlow(id string, userId string, admin bool, auth string) (err error)
 	All(userId string, admin bool, args map[string][]string, auth string) (response lib.FlowsResponse, err error)
-	FindFlow(id string, userId string, auth string) (flow lib.Flow, err error)
+	FindFlow(id, userId, auth string) (flow lib.Flow, err error)
 	GetOperatorFlowMapping() ([]lib.OperatorFlowCount, error)
 }
 
@@ -328,7 +328,7 @@ func (r *MongoRepo) All(userId string, admin bool, args map[string][]string, aut
 	return
 }
 
-func (r *MongoRepo) FindFlow(id string, _ string, auth string) (flow lib.Flow, err error) {
+func (r *MongoRepo) FindFlow(id, _, auth string) (flow lib.Flow, err error) {
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return

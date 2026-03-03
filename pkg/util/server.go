@@ -43,7 +43,7 @@ func StopServer(ctx context.Context, server *http.Server) error {
 	defer Logger.Info("http server halted")
 	<-ctx.Done()
 	Logger.Info("stopping http server")
-	ctxWt, cf := context.WithTimeout(context.Background(), time.Second*5)
+	ctxWt, cf := context.WithTimeout(ctx, time.Second*5)
 	defer cf()
 	if err := server.Shutdown(ctxWt); err != nil {
 		return err

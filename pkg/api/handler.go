@@ -51,7 +51,7 @@ func getInfoH(srv Repo) (string, string, gin.HandlerFunc) {
 // @Failure	500 {string} str
 // @Router /flow/ [put]
 func putFlow(srv Repo) (string, string, gin.HandlerFunc) {
-	return http.MethodPut, "/flow/", func(gc *gin.Context) {
+	return http.MethodPut, FlowPath + "/", func(gc *gin.Context) {
 		var request lib.Flow
 		if err := gc.ShouldBindJSON(&request); err != nil {
 			util.Logger.Error("error creating flow", "error", err)
@@ -79,7 +79,7 @@ func putFlow(srv Repo) (string, string, gin.HandlerFunc) {
 // @Failure	500 {string} str
 // @Router /flow/{id}/ [post]
 func postFlow(srv Repo) (string, string, gin.HandlerFunc) {
-	return http.MethodPost, "/flow/:id/", func(gc *gin.Context) {
+	return http.MethodPost, FlowPath + "/:id/", func(gc *gin.Context) {
 		var request lib.Flow
 		if err := gc.ShouldBindJSON(&request); err != nil {
 			util.Logger.Error("error updating flow", "error", err)
@@ -105,7 +105,7 @@ func postFlow(srv Repo) (string, string, gin.HandlerFunc) {
 // @Failure	500 {string} str
 // @Router /flow/{id}/ [delete]
 func deleteFlow(srv Repo) (string, string, gin.HandlerFunc) {
-	return http.MethodDelete, "/flow/:id/", func(gc *gin.Context) {
+	return http.MethodDelete, FlowPath + "/:id/", func(gc *gin.Context) {
 		err := srv.DeleteFlow(gc.Param("id"), gc.GetString(UserIdKey), gc.GetHeader("Authorization"))
 		if err != nil {
 			util.Logger.Error("error deleting flow", "error", err)
@@ -125,7 +125,7 @@ func deleteFlow(srv Repo) (string, string, gin.HandlerFunc) {
 // @Failure	500 {string} str
 // @Router /flow [get]
 func getAll(srv Repo) (string, string, gin.HandlerFunc) {
-	return http.MethodGet, "/flow", func(gc *gin.Context) {
+	return http.MethodGet, FlowPath, func(gc *gin.Context) {
 		args := gc.Request.URL.Query()
 		flows, err := srv.GetFlows(gc.GetString(UserIdKey), args, gc.GetHeader("Authorization"))
 		if err != nil {

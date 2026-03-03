@@ -16,8 +16,11 @@
 
 package config
 
-import "time"
-import "github.com/SENERGY-Platform/go-service-base/config-hdl"
+import (
+	"time"
+
+	"github.com/SENERGY-Platform/go-service-base/config-hdl"
+)
 
 type Config struct {
 	ServerPort       int           `json:"server_port" env_var:"SERVER_PORT"`
