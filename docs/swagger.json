@@ -29,6 +29,9 @@
                             "$ref": "#/definitions/lib.FlowsResponse"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -63,6 +66,15 @@
                     "201": {
                         "description": "Created"
                     },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -96,6 +108,21 @@
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/lib.Flow"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     "500": {
@@ -139,6 +166,27 @@
                     "200": {
                         "description": "OK"
                     },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -163,8 +211,29 @@
                     }
                 ],
                 "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "type": "still"
+                        }
+                    },
                     "204": {
                         "description": "No Content"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "string"
+                        }
                     },
                     "500": {
                         "description": "Internal Server Error",

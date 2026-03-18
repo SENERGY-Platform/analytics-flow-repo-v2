@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 InfAI (CC SES)
+ * Copyright 2026 InfAI (CC SES)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,23 +16,21 @@
 
 package api
 
-const (
-	HeaderRequestID     = "X-Request-ID"
-	HeaderApiVer        = "X-Api-Version"
-	HeaderSrvName       = "X-Service"
-	HeaderAuthorization = "Authorization"
-	UserIdKey           = "UserId"
-	AdminKey            = "admin"
+import (
+	"errors"
+
+	"github.com/SENERGY-Platform/analytics-flow-repo-v2/lib"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
-const (
-	HealthCheckPath = "/health-check"
-	FlowPath        = "/flow"
-)
-
-const (
-	MessageSomethingWrong = "something went wrong"
-	MessageNotFound       = "not found"
-	MessageForbidden      = "forbidden"
-	MessageBadInput       = "bad input"
-)
+func handleError(err error) error {
+	var ie *lib.ForbiddenError
+	if errors.Is(err, mongo.ErrNoDocuments) {
+		err = lib.NewNotFoundError(errors.New(MessageNotFound))
+	} else if errors.As(err, &ie) {
+		err = lib.NewForbiddenError(errors.New(MessageForbidden))
+	} else {
+		err = lib.NewInternalError(errors.New(MessageSomethingWrong))
+	}
+	return err
+}

@@ -48,20 +48,22 @@ func getInfoH(srv Repo) (string, string, gin.HandlerFunc) {
 // @Param flow body lib.Flow	true "Create flow"
 // @Accept       json
 // @Success	201
-// @Failure	500 {string} str
+// @Failure 400 {string} MessageBadInput
+// @Failure 401
+// @Failure 500 {string} MessageSomethingWrong
 // @Router /flow/ [put]
 func putFlow(srv Repo) (string, string, gin.HandlerFunc) {
 	return http.MethodPut, FlowPath + "/", func(gc *gin.Context) {
 		var request lib.Flow
 		if err := gc.ShouldBindJSON(&request); err != nil {
 			util.Logger.Error("error creating flow", "error", err)
-			_ = gc.Error(errors.New(MessageSomethingWrong))
+			_ = gc.Error(lib.NewInputError(errors.New(MessageBadInput)))
 			return
 		}
 		err := srv.CreateFlow(request, gc.GetString(UserIdKey), gc.GetHeader("Authorization"))
 		if err != nil {
 			util.Logger.Error("error creating flow", "error", err)
-			_ = gc.Error(errors.New(MessageSomethingWrong))
+			_ = gc.Error(handleError(err))
 			return
 		}
 		gc.Status(http.StatusCreated)
@@ -76,20 +78,24 @@ func putFlow(srv Repo) (string, string, gin.HandlerFunc) {
 // @Param id path string true "Flow ID"
 // @Param flow body lib.Flow	true "Update flow"
 // @Success	200
-// @Failure	500 {string} str
+// @Failure 400 {string} MessageBadInput
+// @Failure 401
+// @Failure 403 {string} MessageForbidden
+// @Failure 404 {string} MessageNotFound
+// @Failure 500 {string} MessageSomethingWrong
 // @Router /flow/{id}/ [post]
 func postFlow(srv Repo) (string, string, gin.HandlerFunc) {
 	return http.MethodPost, FlowPath + "/:id/", func(gc *gin.Context) {
 		var request lib.Flow
 		if err := gc.ShouldBindJSON(&request); err != nil {
 			util.Logger.Error("error updating flow", "error", err)
-			_ = gc.Error(errors.New(MessageSomethingWrong))
+			_ = gc.Error(lib.NewInputError(errors.New(MessageBadInput)))
 			return
 		}
 		err := srv.UpdateFlow(gc.Param("id"), request, gc.GetString(UserIdKey), gc.GetHeader("Authorization"))
 		if err != nil {
 			util.Logger.Error("error updating flow", "error", err)
-			_ = gc.Error(errors.New(MessageSomethingWrong))
+			_ = gc.Error(handleError(err))
 			return
 		}
 		gc.Status(http.StatusOK)
@@ -101,15 +107,19 @@ func postFlow(srv Repo) (string, string, gin.HandlerFunc) {
 // @Description	Deletes a flow
 // @Tags Flow
 // @Param id path string true "Flow ID"
+// @Success	202 still in use
 // @Success	204
-// @Failure	500 {string} str
+// @Failure 401
+// @Failure 403 {string} MessageForbidden
+// @Failure 404 {string} MessageNotFound
+// @Failure 500 {string} MessageSomethingWrong
 // @Router /flow/{id}/ [delete]
 func deleteFlow(srv Repo) (string, string, gin.HandlerFunc) {
 	return http.MethodDelete, FlowPath + "/:id/", func(gc *gin.Context) {
 		err := srv.DeleteFlow(gc.Param("id"), gc.GetString(UserIdKey), gc.GetHeader("Authorization"))
 		if err != nil {
 			util.Logger.Error("error deleting flow", "error", err)
-			_ = gc.Error(errors.New(MessageSomethingWrong))
+			_ = gc.Error(handleError(err))
 			return
 		}
 		gc.Status(http.StatusNoContent)
@@ -122,6 +132,7 @@ func deleteFlow(srv Repo) (string, string, gin.HandlerFunc) {
 // @Tags Flow
 // @Produce json
 // @Success	200 {object} lib.FlowsResponse
+// @Failure 401
 // @Failure	500 {string} str
 // @Router /flow [get]
 func getAll(srv Repo) (string, string, gin.HandlerFunc) {
@@ -130,7 +141,7 @@ func getAll(srv Repo) (string, string, gin.HandlerFunc) {
 		flows, err := srv.GetFlows(gc.GetString(UserIdKey), args, gc.GetHeader("Authorization"))
 		if err != nil {
 			util.Logger.Error("error getting flows", "error", err)
-			_ = gc.Error(errors.New(MessageSomethingWrong))
+			_ = gc.Error(handleError(err))
 			return
 		}
 		gc.JSON(http.StatusOK, flows)
@@ -144,14 +155,17 @@ func getAll(srv Repo) (string, string, gin.HandlerFunc) {
 // @Produce json
 // @Param id path string true "Flow ID"
 // @Success	200 {object} lib.Flow
-// @Failure	500 {string} str
+// @Failure 401
+// @Failure 403 {string} MessageForbidden
+// @Failure 404 {string} MessageNotFound
+// @Failure 500 {string} MessageSomethingWrong
 // @Router /flow/{id} [get]
 func getFlow(srv Repo) (string, string, gin.HandlerFunc) {
 	return http.MethodGet, "/flow/:id", func(gc *gin.Context) {
 		flow, err := srv.GetFlow(gc.Param("id"), gc.GetString(UserIdKey), gc.GetHeader("Authorization"))
 		if err != nil {
 			util.Logger.Error("error getting flow", "error", err)
-			_ = gc.Error(errors.New(MessageSomethingWrong))
+			_ = gc.Error(handleError(err))
 			return
 		}
 		gc.JSON(http.StatusOK, flow)
@@ -163,7 +177,7 @@ func getOperatorUsageAdmin(srv Repo) (string, string, gin.HandlerFunc) {
 		data, err := srv.GetOperatorUsage()
 		if err != nil {
 			util.Logger.Error("error getting operator usage", "error", err)
-			_ = gc.Error(errors.New(MessageSomethingWrong))
+			_ = gc.Error(handleError(err))
 			return
 		}
 		gc.JSON(http.StatusOK, data)

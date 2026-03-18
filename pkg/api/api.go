@@ -62,9 +62,7 @@ func New(srv Repo, staticHeader map[string]string, urlPrefix string) (*gin.Engin
 	middleware = append(middleware,
 		gin_mw.StaticHeaderHandler(staticHeader),
 		requestid.New(requestid.WithCustomHeaderStrKey(HeaderRequestID)),
-		gin_mw.ErrorHandler(func(err error) int {
-			return 0
-		}, ", "),
+		gin_mw.ErrorHandler(util.GetStatusCode, ", "),
 		gin_mw.StructRecoveryHandler(util.Logger, gin_mw.DefaultRecoveryFunc),
 	)
 	httpHandler.Use(middleware...)
