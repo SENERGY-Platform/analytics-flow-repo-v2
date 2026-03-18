@@ -28,6 +28,7 @@ import (
 	operator_api "github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/operator-api"
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/repo"
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/util"
+	pipelinesClient "github.com/SENERGY-Platform/analytics-pipeline/client"
 	"github.com/SENERGY-Platform/go-service-base/srv-info-hdl"
 	sb_util "github.com/SENERGY-Platform/go-service-base/util"
 	permV2Client "github.com/SENERGY-Platform/permissions-v2/pkg/client"
@@ -76,8 +77,12 @@ func main() {
 	} else {
 		perm = permV2Client.New(cfg.PermissionsV2Url)
 	}
+
+	var pipe pipelinesClient.Client
+	pipe = *pipelinesClient.NewClient(cfg.PipelineRegistryUrl)
+
 	operatorRepo := operator_api.New(cfg.OperatorRepoUrl)
-	srv, err := repo.New(*srvInfoHdl, perm, operatorRepo)
+	srv, err := repo.New(*srvInfoHdl, perm, operatorRepo, pipe)
 	if err != nil {
 		util.Logger.Error("error on new repo", "error", err)
 		ec = 1

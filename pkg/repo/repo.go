@@ -18,9 +18,12 @@ package repo
 
 import (
 	"context"
+	"errors"
+	"net/http"
 
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/lib"
 	operator_api "github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/operator-api"
+	pipelinesClient "github.com/SENERGY-Platform/analytics-pipeline/client"
 	srv_info_hdl "github.com/SENERGY-Platform/go-service-base/srv-info-hdl"
 	permV2Client "github.com/SENERGY-Platform/permissions-v2/pkg/client"
 )
@@ -29,15 +32,17 @@ type Repo struct {
 	srvInfoHdl   srv_info_hdl.Handler
 	dbRepo       FlowRepository
 	operatorRepo *operator_api.Repo
+	pipe         pipelinesClient.Client
 }
 
-func New(srvInfoHdl srv_info_hdl.Handler, perm permV2Client.Client, operatorRepo *operator_api.Repo) (*Repo, error) {
+func New(srvInfoHdl srv_info_hdl.Handler, perm permV2Client.Client, operatorRepo *operator_api.Repo, pipe pipelinesClient.Client) (*Repo, error) {
 	dbRepo := NewMongoRepo(perm)
 	err := dbRepo.validateFlowPermissions()
 	return &Repo{
 		srvInfoHdl:   srvInfoHdl,
 		dbRepo:       dbRepo,
 		operatorRepo: operatorRepo,
+		pipe:         pipe,
 	}, err
 }
 
@@ -86,7 +91,17 @@ func (r *Repo) validateOperators(flow *lib.Flow, userId string, auth string) err
 }
 
 func (r *Repo) DeleteFlow(id, userId, auth string) (err error) {
-	return r.dbRepo.DeleteFlow(id, userId, false, auth)
+	_, err, code := r.pipe.GetFlowUsageById(auth, userId, id)
+	if err != nil {
+		return err
+	}
+	if code != http.StatusOK {
+		if code == http.StatusNoContent {
+			return r.dbRepo.DeleteFlow(id, userId, false, auth)
+		}
+		return errors.New("something went wrong")
+	}
+	return errors.New("still used")
 }
 
 func (r *Repo) GetFlows(userId string, args map[string][]string, auth string) (response lib.FlowsResponse, err error) {
