@@ -46,10 +46,11 @@ func getInfoH(srv Repo) (string, string, gin.HandlerFunc) {
 // @Description	Validates and stores a flow
 // @Tags Flow
 // @Param flow body lib.Flow	true "Create flow"
-// @Accept       json
+// @Accept json
 // @Success	201
 // @Failure 400 {string} MessageBadInput
-// @Failure 401
+// @Failure 401 {string} MessageUnauthorized
+// @Failure 424 {string} MessageExternalResourceError
 // @Failure 500 {string} MessageSomethingWrong
 // @Router /flow/ [put]
 func putFlow(srv Repo) (string, string, gin.HandlerFunc) {
@@ -74,14 +75,15 @@ func putFlow(srv Repo) (string, string, gin.HandlerFunc) {
 // @Summary Update flow
 // @Description	Validates and updates a flow
 // @Tags Flow
-// @Accept       json
+// @Accept json
 // @Param id path string true "Flow ID"
 // @Param flow body lib.Flow	true "Update flow"
 // @Success	200
 // @Failure 400 {string} MessageBadInput
-// @Failure 401
+// @Failure 401 {string} MessageUnauthorized
 // @Failure 403 {string} MessageForbidden
 // @Failure 404 {string} MessageNotFound
+// @Failure 424 {string} MessageExternalResourceError
 // @Failure 500 {string} MessageSomethingWrong
 // @Router /flow/{id}/ [post]
 func postFlow(srv Repo) (string, string, gin.HandlerFunc) {
@@ -107,11 +109,12 @@ func postFlow(srv Repo) (string, string, gin.HandlerFunc) {
 // @Description	Deletes a flow
 // @Tags Flow
 // @Param id path string true "Flow ID"
-// @Success	202 still in use
 // @Success	204
-// @Failure 401
+// @Failure 401 {string} MessageUnauthorized
 // @Failure 403 {string} MessageForbidden
 // @Failure 404 {string} MessageNotFound
+// @Failure	409 {string} MessageStillInUse
+// @Failure 424 {string} MessageExternalResourceError
 // @Failure 500 {string} MessageSomethingWrong
 // @Router /flow/{id}/ [delete]
 func deleteFlow(srv Repo) (string, string, gin.HandlerFunc) {
@@ -132,8 +135,8 @@ func deleteFlow(srv Repo) (string, string, gin.HandlerFunc) {
 // @Tags Flow
 // @Produce json
 // @Success	200 {object} lib.FlowsResponse
-// @Failure 401
-// @Failure	500 {string} str
+// @Failure 401 {string} MessageUnauthorized
+// @Failure 500 {string} MessageSomethingWrong
 // @Router /flow [get]
 func getAll(srv Repo) (string, string, gin.HandlerFunc) {
 	return http.MethodGet, FlowPath, func(gc *gin.Context) {
@@ -155,7 +158,7 @@ func getAll(srv Repo) (string, string, gin.HandlerFunc) {
 // @Produce json
 // @Param id path string true "Flow ID"
 // @Success	200 {object} lib.Flow
-// @Failure 401
+// @Failure 401 {string} MessageUnauthorized
 // @Failure 403 {string} MessageForbidden
 // @Failure 404 {string} MessageNotFound
 // @Failure 500 {string} MessageSomethingWrong

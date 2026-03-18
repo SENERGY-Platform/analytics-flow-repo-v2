@@ -16,6 +16,8 @@
 
 package lib
 
+import "github.com/SENERGY-Platform/analytics-pipeline/lib"
+
 type cError struct {
 	err error
 }
@@ -29,6 +31,15 @@ type InputError struct {
 }
 
 type NotFoundError struct {
+	cError
+}
+
+type StillInUseError struct {
+	*lib.FlowUsage
+	cError
+}
+
+type ExternalResourceError struct {
 	cError
 }
 
@@ -54,6 +65,14 @@ func NewInputError(err error) error {
 
 func NewNotFoundError(err error) error {
 	return &NotFoundError{cError{err: err}}
+}
+
+func NewStillInUseError(usage *lib.FlowUsage, err error) error {
+	return &StillInUseError{usage, cError{err: err}}
+}
+
+func NewExternalResourceError(err error) error {
+	return &ExternalResourceError{cError{err: err}}
 }
 
 func NewForbiddenError(err error) error {

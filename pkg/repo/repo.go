@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/lib"
 	operator_api "github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/operator-api"
@@ -76,7 +77,7 @@ func (r *Repo) validateOperators(flow *lib.Flow, userId string, auth string) err
 		if operator.Type == "senergy.NodeElement" {
 			op, err := r.operatorRepo.GetOperator(*operator.OperatorId, userId, auth)
 			if err != nil {
-				return err
+				return lib.NewExternalResourceError(err)
 			}
 			operator.Name = &op.Name
 			operator.Image = &op.Image
@@ -91,17 +92,17 @@ func (r *Repo) validateOperators(flow *lib.Flow, userId string, auth string) err
 }
 
 func (r *Repo) DeleteFlow(id, userId, auth string) (err error) {
-	_, err, code := r.pipe.GetFlowUsageById(auth, userId, id)
+	usage, err, code := r.pipe.GetFlowUsageById(auth, userId, id)
 	if err != nil {
-		return err
+		return lib.NewExternalResourceError(err)
 	}
 	if code != http.StatusOK {
 		if code == http.StatusNoContent {
 			return r.dbRepo.DeleteFlow(id, userId, false, auth)
 		}
-		return errors.New("something went wrong")
+		return lib.NewExternalResourceError(errors.New("pipeline registry error, wrong status code " + strconv.Itoa(code)))
 	}
-	return errors.New("still used")
+	return lib.NewStillInUseError(usage, errors.New("flow still in use"))
 }
 
 func (r *Repo) GetFlows(userId string, args map[string][]string, auth string) (response lib.FlowsResponse, err error) {

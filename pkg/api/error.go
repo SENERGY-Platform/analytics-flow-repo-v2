@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package util
+package api
 
 import (
 	"errors"
@@ -39,6 +39,14 @@ func GetStatusCode(err error) int {
 	var fe *lib.ForbiddenError
 	if errors.As(err, &fe) {
 		return http.StatusForbidden
+	}
+	var ue *lib.StillInUseError
+	if errors.As(err, &ue) {
+		return http.StatusConflict
+	}
+	var ee *lib.ExternalResourceError
+	if errors.As(err, &ee) {
+		return http.StatusFailedDependency
 	}
 	return 0
 }

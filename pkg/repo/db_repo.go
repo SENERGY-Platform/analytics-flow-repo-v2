@@ -136,24 +136,29 @@ func (r *MongoRepo) InsertFlow(flow lib.Flow) (err error) {
 		return err
 	}
 	_, err, _ = r.perm.SetPermission(permV2Client.InternalAdminToken, PermV2InstanceTopic, id, permissions)
+	if err != nil {
+		err = lib.NewExternalResourceError(err)
+	}
 	return
 }
 
 func (r *MongoRepo) UpdateFlow(id string, flow lib.Flow, _ string, auth string) (err error) {
 	ok, err, _ := r.perm.CheckPermission(auth, PermV2InstanceTopic, id, permV2Client.Write)
 	if err != nil {
-		return err
+		return lib.NewExternalResourceError(err)
 	}
 	if !ok {
-		return errors.New(MessageMissingRights)
+		return lib.NewForbiddenError(errors.New(MessageMissingRights))
 	}
-
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return
 	}
 	flow.DateUpdated = time.Now()
-	_, err = Mongo().ReplaceOne(CTX, bson.M{"_id": objID}, flow)
+	res, err := Mongo().ReplaceOne(CTX, bson.M{"_id": objID}, flow)
+	if res.MatchedCount == 0 {
+		return lib.NewNotFoundError(errors.New("could not find flow " + id))
+	}
 	return
 }
 
@@ -336,12 +341,11 @@ func (r *MongoRepo) FindFlow(id, _, auth string) (flow lib.Flow, err error) {
 
 	ok, err, _ := r.perm.CheckPermission(auth, PermV2InstanceTopic, id, permV2Client.Read)
 	if err != nil {
-		return flow, err
+		return flow, lib.NewExternalResourceError(err)
 	}
 	if !ok {
-		return flow, errors.New(MessageMissingRights)
+		return flow, lib.NewForbiddenError(errors.New(MessageMissingRights))
 	}
-
 	err = Mongo().FindOne(CTX, bson.M{"_id": objID}).Decode(&flow)
 	if err != nil {
 		return

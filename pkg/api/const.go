@@ -31,8 +31,11 @@ const (
 )
 
 const (
-	MessageSomethingWrong = "something went wrong"
-	MessageNotFound       = "not found"
-	MessageForbidden      = "forbidden"
-	MessageBadInput       = "bad input"
+	MessageSomethingWrong        = "something went wrong"
+	MessageNotFound              = "not found"
+	MessageUnauthorized          = "unauthorized"
+	MessageForbidden             = "forbidden"
+	MessageBadInput              = "bad input"
+	MessageStillInUse            = "still in use"
+	MessageExternalResourceError = "external resource error"
 )

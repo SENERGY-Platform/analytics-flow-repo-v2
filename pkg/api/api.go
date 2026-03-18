@@ -62,7 +62,7 @@ func New(srv Repo, staticHeader map[string]string, urlPrefix string) (*gin.Engin
 	middleware = append(middleware,
 		gin_mw.StaticHeaderHandler(staticHeader),
 		requestid.New(requestid.WithCustomHeaderStrKey(HeaderRequestID)),
-		gin_mw.ErrorHandler(util.GetStatusCode, ", "),
+		gin_mw.ErrorHandler(GetStatusCode, ", "),
 		gin_mw.StructRecoveryHandler(util.Logger, gin_mw.DefaultRecoveryFunc),
 	)
 	httpHandler.Use(middleware...)
@@ -99,7 +99,8 @@ func AuthMiddleware() gin.HandlerFunc {
 		userId, err := getUserId(gc)
 		if err != nil {
 			util.Logger.Error("could not get user id")
-			gc.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			gc.Abort()
+			gc.String(http.StatusUnauthorized, MessageUnauthorized)
 			return
 		}
 		gc.Set(UserIdKey, userId)

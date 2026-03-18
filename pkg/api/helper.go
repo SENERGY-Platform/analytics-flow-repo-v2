@@ -24,13 +24,27 @@ import (
 )
 
 func handleError(err error) error {
-	var ie *lib.ForbiddenError
-	if errors.Is(err, mongo.ErrNoDocuments) {
-		err = lib.NewNotFoundError(errors.New(MessageNotFound))
-	} else if errors.As(err, &ie) {
-		err = lib.NewForbiddenError(errors.New(MessageForbidden))
-	} else {
-		err = lib.NewInternalError(errors.New(MessageSomethingWrong))
+	if err == nil {
+		return nil
 	}
-	return err
+
+	switch {
+	case errors.Is(err, mongo.ErrNoDocuments):
+		return lib.NewNotFoundError(errors.New(MessageNotFound))
+
+	case errors.As(err, new(*lib.NotFoundError)):
+		return lib.NewNotFoundError(errors.New(MessageNotFound))
+
+	case errors.As(err, new(*lib.ForbiddenError)):
+		return lib.NewForbiddenError(errors.New(MessageForbidden))
+
+	case errors.As(err, new(*lib.StillInUseError)):
+		return lib.NewStillInUseError(nil, errors.New(MessageStillInUse))
+
+	case errors.As(err, new(*lib.ExternalResourceError)):
+		return lib.NewExternalResourceError(errors.New(MessageExternalResourceError))
+
+	default:
+		return lib.NewInternalError(errors.New(MessageSomethingWrong))
+	}
 }
