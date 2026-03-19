@@ -47,7 +47,7 @@ func New(path string) (*Config, error) {
 		HttpTimeout:         time.Second * 30,
 		PermissionsV2Url:    "http://permv2.permissions:8080",
 		OperatorRepoUrl:     "http://operator-repo:8080",
-		PipelineRegistryUrl: "http://api.analytics-pipeline-service:8080",
+		PipelineRegistryUrl: "http://api.analytics-pipeline-service:8000",
 	}
 	err := config_hdl.Load(&cfg, nil, envTypeParser, nil, path)
 	return &cfg, err
