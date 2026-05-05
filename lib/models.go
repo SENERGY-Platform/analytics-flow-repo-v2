@@ -55,6 +55,7 @@ type Cell struct {
 	Config         *[]ConfigValue `json:"config,omitempty"`
 	Cost           *int64         `json:"cost,omitempty"`
 	DeploymentType *string        `json:"deploymentType,omitempty"`
+	Version        *int           `json:"version,omitempty"`
 }
 
 type CellPosition struct {
