@@ -26,7 +26,7 @@ import (
 type Repo interface {
 	SrvInfo(ctx context.Context) srv_info_hdl.ServiceInfo
 	HealthCheck(ctx context.Context) error
-	CreateFlow(flow lib.Flow, userId string, authString string) (err error)
+	CreateFlow(flow lib.Flow, userId string, authString string) (id string, err error)
 	UpdateFlow(id string, flow lib.Flow, userId string, authString string) (err error)
 	DeleteFlow(id, userId, auth string) (err error)
 	GetFlows(userId string, args map[string][]string, auth string) (response lib.FlowsResponse, err error)

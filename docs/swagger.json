@@ -50,6 +50,9 @@
                 "consumes": [
                     "application/json"
                 ],
+                "produces": [
+                    "application/json"
+                ],
                 "tags": [
                     "Flow"
                 ],
@@ -67,7 +70,10 @@
                 ],
                 "responses": {
                     "201": {
-                        "description": "Created"
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/lib.FlowCreateResponse"
+                        }
                     },
                     "400": {
                         "description": "Bad Request",
@@ -355,6 +361,9 @@
                 },
                 "type": {
                     "type": "string"
+                },
+                "version": {
+                    "type": "integer"
                 }
             }
         },
@@ -419,6 +428,14 @@
                     "type": "string"
                 },
                 "userId": {
+                    "type": "string"
+                }
+            }
+        },
+        "lib.FlowCreateResponse": {
+            "type": "object",
+            "properties": {
+                "_id": {
                     "type": "string"
                 }
             }

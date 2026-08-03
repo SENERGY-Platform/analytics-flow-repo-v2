@@ -38,7 +38,7 @@ import (
 )
 
 type FlowRepository interface {
-	InsertFlow(flow lib.Flow) (err error)
+	InsertFlow(flow lib.Flow) (id string, err error)
 	UpdateFlow(id string, flow lib.Flow, userId string, auth string) (err error)
 	DeleteFlow(id string, userId string, admin bool, auth string) (err error)
 	All(userId string, admin bool, args map[string][]string, auth string) (response lib.FlowsResponse, err error)
@@ -121,7 +121,7 @@ func (r *MongoRepo) validateFlowPermissions() (err error) {
 	return
 }
 
-func (r *MongoRepo) InsertFlow(flow lib.Flow) (err error) {
+func (r *MongoRepo) InsertFlow(flow lib.Flow) (id string, err error) {
 	flow.DateCreated = time.Now()
 	flow.DateUpdated = time.Now()
 	permissions := permV2Client.ResourcePermissions{
@@ -131,10 +131,10 @@ func (r *MongoRepo) InsertFlow(flow lib.Flow) (err error) {
 	}
 	SetDefaultPermissions(flow, permissions)
 	result, err := Mongo().InsertOne(CTX, flow)
-	id := result.InsertedID.(primitive.ObjectID).Hex()
 	if err != nil {
-		return err
+		return "", err
 	}
+	id = result.InsertedID.(primitive.ObjectID).Hex()
 	_, err, _ = r.perm.SetPermission(permV2Client.InternalAdminToken, PermV2InstanceTopic, id, permissions)
 	if err != nil {
 		err = lib.NewExternalResourceError(err)

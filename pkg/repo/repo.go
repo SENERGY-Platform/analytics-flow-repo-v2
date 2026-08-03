@@ -55,7 +55,7 @@ func (r *Repo) HealthCheck(_ context.Context) error {
 	return nil
 }
 
-func (r *Repo) CreateFlow(flow lib.Flow, userId string, auth string) (err error) {
+func (r *Repo) CreateFlow(flow lib.Flow, userId string, auth string) (id string, err error) {
 	err = r.validateOperators(&flow, userId, auth)
 	if err != nil {
 		return

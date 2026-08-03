@@ -37,6 +37,10 @@ type Flow struct {
 	DateUpdated time.Time           `bson:"dateUpdated,omitempty" json:"dateUpdated,omitempty"`
 }
 
+type FlowCreateResponse struct {
+	Id string `json:"_id"`
+}
+
 type Model struct {
 	Cells []Cell `json:"cells,omitempty"`
 }

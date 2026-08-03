@@ -43,17 +43,16 @@ func (c *Client) GetFlow(token, userId, id string) (flow lib.Flow, code int, err
 	return do[lib.Flow](req, token, userId)
 }
 
-func (c *Client) CreateFlow(token string, userId string, flow lib.Flow) (code int, err error) {
+func (c *Client) CreateFlow(token string, userId string, flow lib.Flow) (created lib.FlowCreateResponse, code int, err error) {
 	b, err := json.Marshal(flow)
 	if err != nil {
-		return http.StatusBadRequest, err
+		return created, http.StatusBadRequest, err
 	}
 	req, err := http.NewRequest(http.MethodPut, c.baseUrl+FlowPath+"/", bytes.NewBuffer(b))
 	if err != nil {
-		return http.StatusBadRequest, err
+		return created, http.StatusBadRequest, err
 	}
-	_, code, err = doNoDecode(req, token, userId)
-	return code, err
+	return do[lib.FlowCreateResponse](req, token, userId)
 }
 
 func (c *Client) UpdateFlow(token string, userId string, flow lib.Flow) (code int, err error) {

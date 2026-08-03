@@ -47,7 +47,8 @@ func getInfoH(srv Repo) (string, string, gin.HandlerFunc) {
 // @Tags Flow
 // @Param flow body lib.Flow	true "Create flow"
 // @Accept json
-// @Success	201
+// @Produce json
+// @Success	201 {object} lib.FlowCreateResponse
 // @Failure 400 {string} MessageBadInput
 // @Failure 401 {string} MessageUnauthorized
 // @Failure 424 {string} MessageExternalResourceError
@@ -61,13 +62,13 @@ func putFlow(srv Repo) (string, string, gin.HandlerFunc) {
 			_ = gc.Error(lib.NewInputError(errors.New(MessageBadInput)))
 			return
 		}
-		err := srv.CreateFlow(request, gc.GetString(UserIdKey), gc.GetHeader("Authorization"))
+		id, err := srv.CreateFlow(request, gc.GetString(UserIdKey), gc.GetHeader("Authorization"))
 		if err != nil {
 			util.Logger.Error("error creating flow", "error", err)
 			_ = gc.Error(handleError(err))
 			return
 		}
-		gc.Status(http.StatusCreated)
+		gc.JSON(http.StatusCreated, lib.FlowCreateResponse{Id: id})
 	}
 }
 
