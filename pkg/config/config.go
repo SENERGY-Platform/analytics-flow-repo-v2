@@ -20,17 +20,22 @@ import (
 	"time"
 
 	"github.com/SENERGY-Platform/go-service-base/config-hdl"
+	sb_config_types "github.com/SENERGY-Platform/go-service-base/config-hdl/types"
 )
 
 type Config struct {
-	ServerPort          int           `json:"server_port" env_var:"SERVER_PORT"`
-	Logger              LoggerConfig  `json:"logger" env_var:"LOGGER_CONFIG"`
-	MongoUrl            string        `json:"mongo_url" env_var:"MONGO_URL"`
-	HttpTimeout         time.Duration `json:"http_timeout" env_var:"HTTP_TIMEOUT"`
-	PermissionsV2Url    string        `json:"permissions_v2_url" env_var:"PERMISSIONS_V2_URL"`
-	OperatorRepoUrl     string        `json:"operator_repo_url" env_var:"OPERATOR_REPO_URL"`
-	PipelineRegistryUrl string        `json:"pipeline_registry_url" env_var:"PIPELINE_REGISTRY_URL"`
-	URLPrefix           string        `json:"url_prefix" env_var:"URL_PREFIX"`
+	ServerPort          int                    `json:"server_port" env_var:"SERVER_PORT"`
+	Logger              LoggerConfig           `json:"logger" env_var:"LOGGER_CONFIG"`
+	MongoUrl            string                 `json:"mongo_url" env_var:"MONGO_URL"`
+	MongoUser           string                 `json:"mongo_user" env_var:"MONGO_USER"`
+	MongoPassword       sb_config_types.Secret `json:"mongo_password" env_var:"MONGO_PASSWORD"`
+	MongoAuthSource     string                 `json:"mongo_auth_source" env_var:"MONGO_AUTH_SOURCE"`
+	MongoDatabase       string                 `json:"mongo_database" env_var:"MONGO_DATABASE"`
+	HttpTimeout         time.Duration          `json:"http_timeout" env_var:"HTTP_TIMEOUT"`
+	PermissionsV2Url    string                 `json:"permissions_v2_url" env_var:"PERMISSIONS_V2_URL"`
+	OperatorRepoUrl     string                 `json:"operator_repo_url" env_var:"OPERATOR_REPO_URL"`
+	PipelineRegistryUrl string                 `json:"pipeline_registry_url" env_var:"PIPELINE_REGISTRY_URL"`
+	URLPrefix           string                 `json:"url_prefix" env_var:"URL_PREFIX"`
 }
 
 type LoggerConfig struct {
@@ -43,7 +48,9 @@ func New(path string) (*Config, error) {
 		Logger: LoggerConfig{
 			Level: "info",
 		},
-		MongoUrl:            "localhost:27017",
+		MongoUrl:            "mongodb://localhost:27017",
+		MongoAuthSource:     "admin",
+		MongoDatabase:       "analytics_flow_repo",
 		HttpTimeout:         time.Second * 30,
 		PermissionsV2Url:    "http://permv2.permissions:8080",
 		OperatorRepoUrl:     "http://operator-repo:8080",

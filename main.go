@@ -58,13 +58,13 @@ func main() {
 	util.Logger.Info(srvInfoHdl.Name(), "version", srvInfoHdl.Version())
 	util.Logger.Info("config: " + sb_util.ToJsonStr(cfg))
 
-	err = repo.InitDB(cfg.MongoUrl)
+	err = repo.InitDB(cfg)
 	if err != nil {
 		util.Logger.Error("error on db init", "error", err)
 		ec = 1
 		return
 	}
-	util.Logger.Debug("connected to database")
+	util.Logger.Info("connected to database", "database", cfg.MongoDatabase)
 	defer repo.CloseDB()
 
 	ctx, cf := context.WithCancel(context.Background())
