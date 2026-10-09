@@ -82,7 +82,7 @@ func main() {
 	pipe = *pipelinesClient.NewClient(cfg.PipelineRegistryUrl)
 
 	operatorRepo := operator_api.New(cfg.OperatorRepoUrl)
-	srv, err := repo.New(*srvInfoHdl, perm, operatorRepo, pipe)
+	srv, err := repo.New(*srvInfoHdl, perm, operatorRepo, pipe, cfg.SmartServiceRepositoryUrl)
 	if err != nil {
 		util.Logger.Error("error on new repo", "error", err)
 		ec = 1

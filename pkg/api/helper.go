@@ -27,6 +27,7 @@ func handleError(err error) error {
 	if err == nil {
 		return nil
 	}
+	var inUse *lib.StillInUseError
 
 	switch {
 	case errors.Is(err, mongo.ErrNoDocuments):
@@ -38,8 +39,12 @@ func handleError(err error) error {
 	case errors.As(err, new(*lib.ForbiddenError)):
 		return lib.NewForbiddenError(errors.New(MessageForbidden))
 
-	case errors.As(err, new(*lib.StillInUseError)):
-		return lib.NewStillInUseError(nil, errors.New(MessageStillInUse))
+	case errors.As(err, &inUse):
+		// The usage is counts and names the caller may read; only the text is replaced.
+		return lib.NewStillInUseError(inUse.FlowUsage, inUse.Smart, errors.New(MessageStillInUse))
+
+	case errors.As(err, new(*lib.UsageUnavailableError)):
+		return lib.NewUsageUnavailableError(errors.New(MessageUsageUnavailable))
 
 	case errors.As(err, new(*lib.ExternalResourceError)):
 		return lib.NewExternalResourceError(errors.New(MessageExternalResourceError))

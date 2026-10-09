@@ -35,7 +35,9 @@ type Config struct {
 	PermissionsV2Url    string                 `json:"permissions_v2_url" env_var:"PERMISSIONS_V2_URL"`
 	OperatorRepoUrl     string                 `json:"operator_repo_url" env_var:"OPERATOR_REPO_URL"`
 	PipelineRegistryUrl string                 `json:"pipeline_registry_url" env_var:"PIPELINE_REGISTRY_URL"`
-	URLPrefix           string                 `json:"url_prefix" env_var:"URL_PREFIX"`
+	// SmartServiceRepositoryUrl is asked before a flow is deleted, to see whether smart services use it.
+	SmartServiceRepositoryUrl string `json:"smart_service_repository_url" env_var:"SMART_SERVICE_REPOSITORY_URL"`
+	URLPrefix                 string `json:"url_prefix" env_var:"URL_PREFIX"`
 }
 
 type LoggerConfig struct {
@@ -55,6 +57,8 @@ func New(path string) (*Config, error) {
 		PermissionsV2Url:    "http://permv2.permissions:8080",
 		OperatorRepoUrl:     "http://operator-repo:8080",
 		PipelineRegistryUrl: "http://api.analytics-pipeline-service:8000",
+
+		SmartServiceRepositoryUrl: "http://api.smart-service-repository:8080",
 	}
 	err := config_hdl.Load(&cfg, nil, envTypeParser, nil, path)
 	return &cfg, err

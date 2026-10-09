@@ -48,5 +48,9 @@ func GetStatusCode(err error) int {
 	if errors.As(err, &ee) {
 		return http.StatusFailedDependency
 	}
+	var uue *lib.UsageUnavailableError
+	if errors.As(err, &uue) {
+		return http.StatusBadGateway
+	}
 	return 0
 }

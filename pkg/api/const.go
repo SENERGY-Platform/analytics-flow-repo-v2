@@ -39,4 +39,5 @@ const (
 	MessageBadInput              = "bad input"
 	MessageStillInUse            = "still in use"
 	MessageExternalResourceError = "external resource error"
+	MessageUsageUnavailable      = "could not check whether smart services use the flow, nothing was deleted"
 )

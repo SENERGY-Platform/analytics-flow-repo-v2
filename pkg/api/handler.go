@@ -20,6 +20,7 @@ import (
 	"errors"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/lib"
@@ -108,27 +109,77 @@ func postFlow(srv Repo) (string, string, gin.HandlerFunc) {
 
 // deleteFlow godoc
 // @Summary Delete flow
-// @Description	Deletes a flow
+// @Description	Deletes a flow. Refused with 409 while pipelines or smart services use it, unless an administrator passes force. Answers 424 when the pipeline registry cannot be asked and 502 when the smart-service-repository cannot; nothing is deleted then, also with force.
 // @Tags Flow
+// @Produce json
 // @Param id path string true "Flow ID"
+// @Param force query bool false "Administrators only: delete although pipelines or smart services still use the flow" default(false)
 // @Success	204
+// @Failure 400 {string} MessageBadInput
 // @Failure 401 {string} MessageUnauthorized
 // @Failure 403 {string} MessageForbidden
 // @Failure 404 {string} MessageNotFound
-// @Failure	409 {string} MessageStillInUse
+// @Failure	409 {object} lib.StillInUseResponse
 // @Failure 424 {string} MessageExternalResourceError
 // @Failure 500 {string} MessageSomethingWrong
+// @Failure 502 {string} MessageUsageUnavailable
 // @Router /flow/{id}/ [delete]
 func deleteFlow(srv Repo) (string, string, gin.HandlerFunc) {
 	return http.MethodDelete, FlowPath + "/:id/", func(gc *gin.Context) {
-		err := srv.DeleteFlow(gc.Param("id"), gc.GetString(UserIdKey), gc.GetHeader("Authorization"))
+		opts, err := deleteOptions(gc)
+		if err != nil {
+			_ = gc.Error(err)
+			return
+		}
+		err = srv.DeleteFlow(gc.Param("id"), gc.GetString(UserIdKey), gc.GetHeader("Authorization"), opts)
 		if err != nil {
 			util.Logger.Error("error deleting flow", "error", err)
-			_ = gc.Error(handleError(err))
+			err = handleError(err)
+			var inUse *lib.StillInUseError
+			if errors.As(err, &inUse) {
+				// The error handler would reduce the usage to text.
+				gc.JSON(http.StatusConflict, stillInUseResponse(inUse))
+				return
+			}
+			_ = gc.Error(err)
 			return
 		}
 		gc.Status(http.StatusNoContent)
 	}
+}
+
+// deleteOptions reads ?force from the request. Force skips the refusal for pipelines and smart
+// services that use the flow, so it is for administrators only.
+func deleteOptions(gc *gin.Context) (lib.DeleteOptions, error) {
+	raw := gc.Query("force")
+	if raw == "" {
+		return lib.DeleteOptions{}, nil
+	}
+	force, err := strconv.ParseBool(raw)
+	if err != nil {
+		return lib.DeleteOptions{}, lib.NewInputError(errors.New(MessageBadInput))
+	}
+	if force {
+		admin, err := isAdmin(gc)
+		if err != nil {
+			util.Logger.Warn("could not check the admin role", "error", err)
+		}
+		if err != nil || !admin {
+			return lib.DeleteOptions{}, lib.NewForbiddenError(errors.New(MessageForbidden))
+		}
+	}
+	return lib.DeleteOptions{Force: force}, nil
+}
+
+func stillInUseResponse(e *lib.StillInUseError) lib.StillInUseResponse {
+	body := lib.StillInUseResponse{Error: e.Error(), Pipelines: lib.PipelineCount(e.FlowUsage), Readable: []lib.SmartServiceRef{}}
+	if e.Smart != nil {
+		body.Releases, body.Instances = e.Smart.Releases, e.Smart.Instances
+		if e.Smart.Readable != nil {
+			body.Readable = e.Smart.Readable
+		}
+	}
+	return body
 }
 
 // getAll godoc

@@ -34,8 +34,17 @@ type NotFoundError struct {
 	cError
 }
 
+// StillInUseError refuses a deletion. FlowUsage is the pipelines that use the flow, Smart the
+// smart service releases; each is nil when it does not use the flow.
 type StillInUseError struct {
 	*lib.FlowUsage
+	Smart *SmartServiceUsage
+	cError
+}
+
+// UsageUnavailableError means the smart-service-repository could not tell whether smart services
+// use the flow. Its text reaches the client, so build it only from static strings.
+type UsageUnavailableError struct {
 	cError
 }
 
@@ -67,8 +76,21 @@ func NewNotFoundError(err error) error {
 	return &NotFoundError{cError{err: err}}
 }
 
-func NewStillInUseError(usage *lib.FlowUsage, err error) error {
-	return &StillInUseError{usage, cError{err: err}}
+func NewStillInUseError(usage *lib.FlowUsage, smart *SmartServiceUsage, err error) error {
+	return &StillInUseError{usage, smart, cError{err: err}}
+}
+
+// PipelineCount is the number of pipelines in the registry's answer, at least 1 for a non-nil
+// answer: the registry only answers 200 for a flow that pipelines use.
+func PipelineCount(usage *lib.FlowUsage) int {
+	if usage == nil {
+		return 0
+	}
+	return max(1, int(usage.Count), len(usage.PipelineIds))
+}
+
+func NewUsageUnavailableError(err error) error {
+	return &UsageUnavailableError{cError{err: err}}
 }
 
 func NewExternalResourceError(err error) error {

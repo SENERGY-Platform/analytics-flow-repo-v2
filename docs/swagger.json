@@ -226,7 +226,10 @@
                 }
             },
             "delete": {
-                "description": "Deletes a flow",
+                "description": "Deletes a flow. Refused with 409 while pipelines or smart services use it, unless an administrator passes force. Answers 424 when the pipeline registry cannot be asked and 502 when the smart-service-repository cannot; nothing is deleted then, also with force.",
+                "produces": [
+                    "application/json"
+                ],
                 "tags": [
                     "Flow"
                 ],
@@ -238,11 +241,24 @@
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Administrators only: delete although pipelines or smart services still use the flow",
+                        "name": "force",
+                        "in": "query"
                     }
                 ],
                 "responses": {
                     "204": {
                         "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
                     },
                     "401": {
                         "description": "Unauthorized",
@@ -265,7 +281,7 @@
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/lib.StillInUseResponse"
                         }
                     },
                     "424": {
@@ -276,6 +292,12 @@
                     },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
                         "schema": {
                             "type": "string"
                         }
@@ -534,6 +556,43 @@
                     "items": {
                         "$ref": "#/definitions/lib.FlowRef"
                     }
+                }
+            }
+        },
+        "lib.SmartServiceRef": {
+            "type": "object",
+            "properties": {
+                "design_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "lib.StillInUseResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "instances": {
+                    "type": "integer"
+                },
+                "pipelines": {
+                    "type": "integer"
+                },
+                "readable": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/lib.SmartServiceRef"
+                    }
+                },
+                "releases": {
+                    "type": "integer"
                 }
             }
         },

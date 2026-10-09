@@ -19,6 +19,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -85,6 +86,48 @@ func TestNewMongoFromEnv(t *testing.T) {
 	}
 	if cfg.MongoDatabase != "flows_db" {
 		t.Errorf("MongoDatabase = %q", cfg.MongoDatabase)
+	}
+}
+
+func TestNewSmartServiceRepositoryUrl(t *testing.T) {
+	tests := []struct {
+		name string
+		file string
+		env  string
+		want string
+	}{
+		{"default", "", "", "http://api.smart-service-repository:8080"},
+		{"default when the file omits it", `{}`, "", "http://api.smart-service-repository:8080"},
+		{"file", `{"smart_service_repository_url": "http://file:1"}`, "", "http://file:1"},
+		{"environment wins over the file", `{"smart_service_repository_url": "http://file:1"}`, "http://env:2", "http://env:2"},
+		// The repo refuses an empty address at startup, see TestNewRefusesAnEmptySmartServiceRepositoryUrl.
+		{"empty in the file stays empty", `{"smart_service_repository_url": ""}`, "", ""},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			unsetMongoEnv(t)
+			// An empty variable counts as set, so unset it for the cases without one.
+			t.Setenv("SMART_SERVICE_REPOSITORY_URL", tc.env)
+			if tc.env == "" {
+				if err := os.Unsetenv("SMART_SERVICE_REPOSITORY_URL"); err != nil {
+					t.Fatal(err)
+				}
+			}
+			path := ""
+			if tc.file != "" {
+				path = filepath.Join(t.TempDir(), "config.json")
+				if err := os.WriteFile(path, []byte(tc.file), 0o600); err != nil {
+					t.Fatal(err)
+				}
+			}
+			cfg, err := New(path)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if cfg.SmartServiceRepositoryUrl != tc.want {
+				t.Errorf("SmartServiceRepositoryUrl = %q, want %q", cfg.SmartServiceRepositoryUrl, tc.want)
+			}
+		})
 	}
 }
 

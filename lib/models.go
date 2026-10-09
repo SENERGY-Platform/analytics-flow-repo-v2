@@ -98,3 +98,34 @@ type FlowRef struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
 }
+
+// SmartServiceRef names a smart service design that uses a flow and that the caller may read.
+type SmartServiceRef struct {
+	Id       string `json:"id"`
+	DesignId string `json:"design_id"`
+	Name     string `json:"name"`
+}
+
+// SmartServiceUsage is the smart-service-repository's answer: Releases and Instances count over
+// all users, Readable lists only what the caller may read.
+type SmartServiceUsage struct {
+	Releases  int               `json:"releases"`
+	Instances int               `json:"instances"`
+	Readable  []SmartServiceRef `json:"readable"`
+}
+
+// StillInUseResponse is the 409 body of the flow delete: Pipelines counts the pipelines using the
+// flow, the other fields are the smart-service-repository's answer.
+type StillInUseResponse struct {
+	Error     string            `json:"error"`
+	Pipelines int               `json:"pipelines"`
+	Releases  int               `json:"releases"`
+	Instances int               `json:"instances"`
+	Readable  []SmartServiceRef `json:"readable"`
+}
+
+// DeleteOptions carries what a flow delete needs besides the ids. Force deletes a flow that
+// pipelines or smart services still use; the caller has to have checked that the user may do so.
+type DeleteOptions struct {
+	Force bool
+}

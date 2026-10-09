@@ -10,6 +10,22 @@ swag v1.16.4 reproduces the committed file byte for byte when nothing changed.
 
 `GET /operators/{id}/usage` is open to every authenticated user and answers `{"flows": n, "readable": [{"id", "name"}]}`. `flows` counts the flows of all users that contain a node of the operator; `readable` lists only those the caller may read, selected like the flow listing. The operator repository asks this before it deletes an operator.
 
+## Deleting a flow that is in use
+
+`DELETE /flow/{id}/` asks two services before it deletes: the pipeline registry (`PIPELINE_REGISTRY_URL`) and the smart-service-repository (`GET /resource-usage/flows/{id}`, with the caller's `Authorization` header).
+
+| Env var | Default | Notes |
+|---|---|---|
+| `SMART_SERVICE_REPOSITORY_URL` | `http://api.smart-service-repository:8080` | Address of the smart-service-repository. The in-cluster service; no path prefix. Empty is refused at startup. In a config file: `smart_service_repository_url`. |
+
+- Used by pipelines or by smart service releases: 409 with `{"error", "pipelines", "releases", "instances", "readable": [{"id", "design_id", "name"}]}`. The body used to be the plain text `still in use`; `error` carries that text. `pipelines` counts the pipelines of all users without naming them, `releases` and `instances` count over all users, `readable` lists only the smart service designs the caller may read.
+- The pipeline registry or the smart-service-repository cannot be asked (network error, any status but 200 or 204, an answer without the counts): nothing is deleted. The registry gives 424, the smart-service-repository 502.
+- `?force=true` deletes anyway. It is for administrators only (role `admin` in `X-User-Roles`, or in the token when the header is absent); anyone else gets 403. Both services are still asked, so a forced delete is refused when either cannot answer. A forced delete of a used flow is logged at warn with `flow_id`, `user_id`, `pipelines`, `releases` and `instances`.
+
+The check and the delete are not atomic: a pipeline or release created between them is not seen.
+
+`PERMISSIONS_V2_URL=mock` does not mock the smart-service-repository; deletes need a reachable `SMART_SERVICE_REPOSITORY_URL` there as well.
+
 ## MongoDB configuration
 
 | Env var | Default | Notes |
