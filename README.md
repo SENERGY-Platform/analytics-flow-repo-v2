@@ -4,6 +4,12 @@ Generate swagger docs:
 
     swag init -g api.go -o docs -dir pkg/api --parseDependency --ot json
 
+swag v1.16.4 reproduces the committed file byte for byte when nothing changed.
+
+## Operator usage
+
+`GET /operators/{id}/usage` is open to every authenticated user and answers `{"flows": n, "readable": [{"id", "name"}]}`. `flows` counts the flows of all users that contain a node of the operator; `readable` lists only those the caller may read, selected like the flow listing. The operator repository asks this before it deletes an operator.
+
 ## MongoDB configuration
 
 | Env var | Default | Notes |

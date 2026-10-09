@@ -116,3 +116,35 @@ func (r *Repo) GetFlow(flowId, userId, auth string) (response lib.Flow, err erro
 func (r *Repo) GetOperatorUsage() ([]lib.OperatorFlowCount, error) {
 	return r.dbRepo.GetOperatorFlowMapping()
 }
+
+// GetUsageOfOperator counts the flows of all users from the same aggregation as GetOperatorUsage and
+// lists the flows the caller may read through the flow listing, so both use one read check.
+func (r *Repo) GetUsageOfOperator(operatorId, userId, auth string) (usage lib.OperatorFlowUsage, err error) {
+	mapping, err := r.dbRepo.GetOperatorFlowMapping()
+	if err != nil {
+		return
+	}
+	for _, m := range mapping {
+		if m.OperatorID == operatorId {
+			usage.Flows = len(m.Flows)
+			break
+		}
+	}
+	usage.Readable = []lib.FlowRef{}
+	if usage.Flows == 0 {
+		return
+	}
+	// The filter splits on "," and "|"; the handler rejects ids containing them.
+	readable, err := r.dbRepo.All(userId, false, map[string][]string{"filter": {"operator:" + operatorId}}, auth)
+	if err != nil {
+		return lib.OperatorFlowUsage{}, err
+	}
+	for _, flow := range readable.Flows {
+		ref := lib.FlowRef{Name: flow.Name}
+		if flow.Id != nil {
+			ref.Id = flow.Id.Hex()
+		}
+		usage.Readable = append(usage.Readable, ref)
+	}
+	return
+}

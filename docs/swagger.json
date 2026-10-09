@@ -308,6 +308,53 @@
                     }
                 }
             }
+        },
+        "/operators/{id}/usage": {
+            "get": {
+                "description": "Counts the flows of all users that contain a node of the operator and lists the ones the caller may read.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Operator"
+                ],
+                "summary": "Get usage of an operator",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Operator ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/lib.OperatorFlowUsage"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -440,6 +487,17 @@
                 }
             }
         },
+        "lib.FlowRef": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "lib.FlowsResponse": {
             "type": "object",
             "properties": {
@@ -461,6 +519,20 @@
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/lib.Cell"
+                    }
+                }
+            }
+        },
+        "lib.OperatorFlowUsage": {
+            "type": "object",
+            "properties": {
+                "flows": {
+                    "type": "integer"
+                },
+                "readable": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/lib.FlowRef"
                     }
                 }
             }

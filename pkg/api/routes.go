@@ -30,6 +30,7 @@ var routesAuth = gin_mw.Routes[Repo]{
 	putFlow,
 	postFlow,
 	deleteFlow,
+	getOperatorUsage,
 }
 
 var routesAdmin = gin_mw.Routes[Repo]{

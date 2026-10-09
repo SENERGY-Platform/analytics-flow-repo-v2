@@ -28,6 +28,7 @@ const (
 const (
 	HealthCheckPath = "/health-check"
 	FlowPath        = "/flow"
+	OperatorPath    = "/operators"
 )
 
 const (

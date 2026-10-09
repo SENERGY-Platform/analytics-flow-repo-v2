@@ -20,6 +20,7 @@ import (
 	"errors"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/lib"
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/util"
@@ -173,6 +174,35 @@ func getFlow(srv Repo) (string, string, gin.HandlerFunc) {
 			return
 		}
 		gc.JSON(http.StatusOK, flow)
+	}
+}
+
+// getOperatorUsage godoc
+// @Summary Get usage of an operator
+// @Description	Counts the flows of all users that contain a node of the operator and lists the ones the caller may read.
+// @Tags Operator
+// @Produce json
+// @Param id path string true "Operator ID"
+// @Success	200 {object} lib.OperatorFlowUsage
+// @Failure 400 {string} MessageBadInput
+// @Failure 401 {string} MessageUnauthorized
+// @Failure 500 {string} MessageSomethingWrong
+// @Router /operators/{id}/usage [get]
+func getOperatorUsage(srv Repo) (string, string, gin.HandlerFunc) {
+	return http.MethodGet, OperatorPath + "/:id/usage", func(gc *gin.Context) {
+		id := gc.Param("id")
+		// The flow filter splits on these two characters, so such an id would match other operators.
+		if strings.ContainsAny(id, ",|") {
+			_ = gc.Error(lib.NewInputError(errors.New(MessageBadInput)))
+			return
+		}
+		usage, err := srv.GetUsageOfOperator(id, gc.GetString(UserIdKey), gc.GetHeader("Authorization"))
+		if err != nil {
+			util.Logger.Error("error getting operator usage", "error", err)
+			_ = gc.Error(handleError(err))
+			return
+		}
+		gc.JSON(http.StatusOK, usage)
 	}
 }
 

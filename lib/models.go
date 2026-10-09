@@ -87,3 +87,14 @@ type FlowCount struct {
 	FlowID *primitive.ObjectID `bson:"flowId"`
 	Count  int32               `bson:"count"`
 }
+
+// OperatorFlowUsage counts the flows of all users that contain an operator; Readable lists only those the caller may read.
+type OperatorFlowUsage struct {
+	Flows    int       `json:"flows"`
+	Readable []FlowRef `json:"readable"`
+}
+
+type FlowRef struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
