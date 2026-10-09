@@ -278,11 +278,15 @@ func (r *MongoRepo) All(userId string, admin bool, args map[string][]string, aut
 				switch key {
 
 				case "operator":
+					// older flows store the key as operatorId; the driver reads both into Cell
 					andFilters = append(andFilters, bson.M{
 						"model.cells": bson.M{
 							"$elemMatch": bson.M{
-								"type":       "senergy.NodeElement",
-								"operatorid": bson.M{"$in": values},
+								"type": "senergy.NodeElement",
+								"$or": bson.A{
+									bson.M{"operatorid": bson.M{"$in": values}},
+									bson.M{"operatorId": bson.M{"$in": values}},
+								},
 							},
 						},
 					})
@@ -360,7 +364,8 @@ func (r *MongoRepo) GetOperatorFlowMapping() ([]lib.OperatorFlowCount, error) {
 		{{"$group", bson.D{
 			{"_id", bson.D{
 				{"flowId", "$_id"},
-				{"operatorId", "$model.cells.operatorid"},
+				// older flows store the key as operatorId; the driver reads both into Cell
+				{"operatorId", bson.D{{"$ifNull", bson.A{"$model.cells.operatorid", "$model.cells.operatorId"}}}},
 			}},
 			{"count", bson.D{{"$sum", 1}}},
 		}}},
