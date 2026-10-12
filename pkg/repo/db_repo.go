@@ -154,8 +154,26 @@ func (r *MongoRepo) UpdateFlow(id string, flow lib.Flow, _ string, auth string) 
 	if err != nil {
 		return
 	}
+	// the update replaces the document, so owner and creation time come from the stored flow, not from the body
+	var stored lib.Flow
+	err = Mongo().FindOne(CTX, bson.M{"_id": objID}, options.FindOne().SetProjection(bson.M{"userId": 1, "dateCreated": 1})).Decode(&stored)
+	if errors.Is(err, mongo.ErrNoDocuments) {
+		return lib.NewNotFoundError(errors.New("could not find flow " + id))
+	}
+	if err != nil {
+		return err
+	}
+	if stored.UserId != "" {
+		flow.UserId = stored.UserId
+	}
+	if !stored.DateCreated.IsZero() {
+		flow.DateCreated = stored.DateCreated
+	}
 	flow.DateUpdated = time.Now()
 	res, err := Mongo().ReplaceOne(CTX, bson.M{"_id": objID}, flow)
+	if err != nil {
+		return err
+	}
 	if res.MatchedCount == 0 {
 		return lib.NewNotFoundError(errors.New("could not find flow " + id))
 	}
