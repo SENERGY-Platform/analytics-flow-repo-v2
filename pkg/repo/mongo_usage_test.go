@@ -165,3 +165,25 @@ func TestMongoFilterOperatorVersionWithoutOperatorIsIgnored(t *testing.T) {
 		t.Errorf("flows = %d, want both: the version only narrows the operator filter", len(got.Flows))
 	}
 }
+
+func TestMongoAllListsOwnFlowsWithoutAPermissionEntry(t *testing.T) {
+	useTestMongo(t)
+	own := pinnedFlow("own", "user-a")
+	foreign := pinnedFlow("foreign", "user-b")
+	insertFlow(t, own)
+	insertFlow(t, foreign)
+	r := &MongoRepo{perm: readablePerm{}}
+
+	resp, err := r.All("user-a", false, map[string][]string{}, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var names []string
+	for _, f := range resp.Flows {
+		names = append(names, f.Name)
+	}
+	if !slices.Equal(names, []string{"own"}) {
+		t.Errorf("listed %v, want only the caller's own flow", names)
+	}
+}

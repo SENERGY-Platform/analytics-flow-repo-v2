@@ -264,6 +264,8 @@ func (r *MongoRepo) All(userId string, admin bool, args map[string][]string, aut
 		andFilters = append(andFilters, bson.M{
 			"$or": bson.A{
 				bson.M{"_id": bson.M{"$in": ids}},
+				// Flow stores the owner as userId; userid is kept for documents written under that key.
+				bson.M{"userId": userId},
 				bson.M{"userid": userId},
 			},
 		})
