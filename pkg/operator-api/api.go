@@ -38,12 +38,12 @@ func (a Repo) GetOperator(id, userId, authorization string) (o operator_repo.Ope
 	request := gorequest.New()
 	request.Get(a.url+"/operator/"+id).Set("X-UserId", userId).Set("Authorization", authorization)
 	resp, body, e := request.End()
-	if resp.StatusCode != http.StatusOK {
-		err = errors.New("operator API - could not get operator from operator service: " + strconv.Itoa(resp.StatusCode) + " " + body)
-		return
-	}
 	if len(e) > 0 {
 		err = errors.New("operator API - could not get operator from operator service: an error occurred")
+		return
+	}
+	if resp.StatusCode != http.StatusOK {
+		err = errors.New("operator API - could not get operator from operator service: " + strconv.Itoa(resp.StatusCode) + " " + body)
 		return
 	}
 	err = json.Unmarshal([]byte(body), &o)

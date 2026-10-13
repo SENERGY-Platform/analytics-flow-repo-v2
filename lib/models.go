@@ -46,20 +46,21 @@ type Model struct {
 }
 
 type Cell struct {
-	Type           string         `json:"type,omitempty"`
-	InPorts        []string       `json:"inPorts,omitempty"`
-	OutPorts       []string       `json:"outPorts,omitempty"`
-	Name           *string        `json:"name,omitempty"`
-	Image          *string        `json:"image,omitempty"`
-	OperatorId     *string        `json:"operatorId,omitempty"`
-	Position       *CellPosition  `json:"position,omitempty"`
-	Source         *CellLink      `json:"source,omitempty"`
-	Target         *CellLink      `json:"target,omitempty"`
-	Id             string         `json:"id,omitempty"`
-	Config         *[]ConfigValue `json:"config,omitempty"`
-	Cost           *int64         `json:"cost,omitempty"`
-	DeploymentType *string        `json:"deploymentType,omitempty"`
-	Version        *int           `json:"version,omitempty"`
+	Type            string         `json:"type,omitempty"`
+	InPorts         []string       `json:"inPorts,omitempty"`
+	OutPorts        []string       `json:"outPorts,omitempty"`
+	Name            *string        `json:"name,omitempty"`
+	Image           *string        `json:"image,omitempty"`
+	OperatorId      *string        `json:"operatorId,omitempty"`
+	Position        *CellPosition  `json:"position,omitempty"`
+	Source          *CellLink      `json:"source,omitempty"`
+	Target          *CellLink      `json:"target,omitempty"`
+	Id              string         `json:"id,omitempty"`
+	Config          *[]ConfigValue `json:"config,omitempty"`
+	Cost            *int64         `json:"cost,omitempty"`
+	DeploymentType  *string        `json:"deploymentType,omitempty"`
+	Version         *int           `json:"version,omitempty"`
+	OperatorVersion *string        `json:"operatorVersion,omitempty"`
 }
 
 type CellPosition struct {

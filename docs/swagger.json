@@ -46,7 +46,7 @@
         },
         "/flow/": {
             "put": {
-                "description": "Validates and stores a flow",
+                "description": "Validates and stores a flow. An operator node may pin an operator version with operatorVersion (vX.Y.Z); its image then comes from that version. Answers 400 for an operator node without operatorId and for a pinned version the operator does not have.",
                 "consumes": [
                     "application/json"
                 ],
@@ -157,7 +157,7 @@
         },
         "/flow/{id}/": {
             "post": {
-                "description": "Validates and updates a flow",
+                "description": "Validates and updates a flow. An operator node may pin an operator version with operatorVersion (vX.Y.Z); its image then comes from that version. Answers 400 for an operator node without operatorId and for a pinned version the operator does not have.",
                 "consumes": [
                     "application/json"
                 ],
@@ -333,7 +333,7 @@
         },
         "/operators/{id}/usage": {
             "get": {
-                "description": "Counts the flows of all users that contain a node of the operator and lists the ones the caller may read.",
+                "description": "Counts the flows of all users that contain a node of the operator and lists the ones the caller may read. With version, only flows with a node that pins that operator version are counted and listed.",
                 "produces": [
                     "application/json"
                 ],
@@ -348,6 +348,12 @@
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Operator version label, vX.Y.Z",
+                        "name": "version",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -380,6 +386,17 @@
         }
     },
     "definitions": {
+        "github_com_SENERGY-Platform_analytics-flow-repo-v2_lib.FlowRef": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "lib.Cell": {
             "type": "object",
             "properties": {
@@ -411,6 +428,9 @@
                     "type": "string"
                 },
                 "operatorId": {
+                    "type": "string"
+                },
+                "operatorVersion": {
                     "type": "string"
                 },
                 "outPorts": {
@@ -509,17 +529,6 @@
                 }
             }
         },
-        "lib.FlowRef": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
         "lib.FlowsResponse": {
             "type": "object",
             "properties": {
@@ -554,7 +563,7 @@
                 "readable": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/lib.FlowRef"
+                        "$ref": "#/definitions/github_com_SENERGY-Platform_analytics-flow-repo-v2_lib.FlowRef"
                     }
                 }
             }

@@ -25,6 +25,7 @@ import (
 
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/lib"
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/util"
+	operator_repo "github.com/SENERGY-Platform/analytics-operator-repo-v2/lib"
 
 	"github.com/gin-gonic/gin"
 )
@@ -45,7 +46,7 @@ func getInfoH(srv Repo) (string, string, gin.HandlerFunc) {
 
 // putFlow godoc
 // @Summary Create flow
-// @Description	Validates and stores a flow
+// @Description	Validates and stores a flow. An operator node may pin an operator version with operatorVersion (vX.Y.Z); its image then comes from that version. Answers 400 for an operator node without operatorId and for a pinned version the operator does not have.
 // @Tags Flow
 // @Param flow body lib.Flow	true "Create flow"
 // @Accept json
@@ -76,7 +77,7 @@ func putFlow(srv Repo) (string, string, gin.HandlerFunc) {
 
 // postFlow godoc
 // @Summary Update flow
-// @Description	Validates and updates a flow
+// @Description	Validates and updates a flow. An operator node may pin an operator version with operatorVersion (vX.Y.Z); its image then comes from that version. Answers 400 for an operator node without operatorId and for a pinned version the operator does not have.
 // @Tags Flow
 // @Accept json
 // @Param id path string true "Flow ID"
@@ -230,10 +231,11 @@ func getFlow(srv Repo) (string, string, gin.HandlerFunc) {
 
 // getOperatorUsage godoc
 // @Summary Get usage of an operator
-// @Description	Counts the flows of all users that contain a node of the operator and lists the ones the caller may read.
+// @Description	Counts the flows of all users that contain a node of the operator and lists the ones the caller may read. With version, only flows with a node that pins that operator version are counted and listed.
 // @Tags Operator
 // @Produce json
 // @Param id path string true "Operator ID"
+// @Param version query string false "Operator version label, vX.Y.Z"
 // @Success	200 {object} lib.OperatorFlowUsage
 // @Failure 400 {string} MessageBadInput
 // @Failure 401 {string} MessageUnauthorized
@@ -247,7 +249,13 @@ func getOperatorUsage(srv Repo) (string, string, gin.HandlerFunc) {
 			_ = gc.Error(lib.NewInputError(errors.New(MessageBadInput)))
 			return
 		}
-		usage, err := srv.GetUsageOfOperator(id, gc.GetString(UserIdKey), gc.GetHeader("Authorization"))
+		// A valid label has no "," or "|" either, so it cannot split the flow filter.
+		version := gc.Query("version")
+		if version != "" && operator_repo.ValidateVersionLabel(version) != nil {
+			_ = gc.Error(lib.NewInputError(errors.New(MessageBadInput)))
+			return
+		}
+		usage, err := srv.GetUsageOfOperator(id, version, gc.GetString(UserIdKey), gc.GetHeader("Authorization"))
 		if err != nil {
 			util.Logger.Error("error getting operator usage", "error", err)
 			_ = gc.Error(handleError(err))

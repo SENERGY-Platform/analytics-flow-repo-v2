@@ -43,7 +43,7 @@ type FlowRepository interface {
 	DeleteFlow(id string, userId string, admin bool, auth string) (err error)
 	All(userId string, admin bool, args map[string][]string, auth string) (response lib.FlowsResponse, err error)
 	FindFlow(id, userId, auth string) (flow lib.Flow, err error)
-	GetOperatorFlowMapping() ([]lib.OperatorFlowCount, error)
+	GetOperatorFlowMapping(version string) ([]lib.OperatorFlowCount, error)
 }
 
 type MongoRepo struct {
@@ -279,6 +279,8 @@ func (r *MongoRepo) All(userId string, admin bool, args map[string][]string, aut
 	}
 
 	if vals, ok := args["filter"]; ok {
+		// operatorversion narrows the operator filter to nodes that pin the label; alone it does nothing.
+		operatorVersion := filterValue(vals, "operatorversion")
 		for _, raw := range vals {
 			for _, f := range strings.Split(raw, "|") {
 
@@ -297,17 +299,17 @@ func (r *MongoRepo) All(userId string, admin bool, args map[string][]string, aut
 
 				case "operator":
 					// older flows store the key as operatorId; the driver reads both into Cell
-					andFilters = append(andFilters, bson.M{
-						"model.cells": bson.M{
-							"$elemMatch": bson.M{
-								"type": "senergy.NodeElement",
-								"$or": bson.A{
-									bson.M{"operatorid": bson.M{"$in": values}},
-									bson.M{"operatorId": bson.M{"$in": values}},
-								},
-							},
+					node := bson.M{
+						"type": "senergy.NodeElement",
+						"$or": bson.A{
+							bson.M{"operatorid": bson.M{"$in": values}},
+							bson.M{"operatorId": bson.M{"$in": values}},
 						},
-					})
+					}
+					if operatorVersion != "" {
+						node["operatorversion"] = operatorVersion
+					}
+					andFilters = append(andFilters, bson.M{"model.cells": bson.M{"$elemMatch": node}})
 
 				default:
 					fieldMap := map[string]string{}
@@ -375,10 +377,28 @@ func (r *MongoRepo) FindFlow(id, _, auth string) (flow lib.Flow, err error) {
 	return
 }
 
-func (r *MongoRepo) GetOperatorFlowMapping() ([]lib.OperatorFlowCount, error) {
+// filterValue returns the value of the first "key:value" segment in the "|"-separated filters.
+func filterValue(filters []string, key string) string {
+	for _, raw := range filters {
+		for _, f := range strings.Split(raw, "|") {
+			if k, v, ok := strings.Cut(f, ":"); ok && k == key {
+				return v
+			}
+		}
+	}
+	return ""
+}
+
+// GetOperatorFlowMapping maps each operator id to the flows that use it. A non-empty version
+// counts only nodes that pin that label.
+func (r *MongoRepo) GetOperatorFlowMapping(version string) ([]lib.OperatorFlowCount, error) {
+	match := bson.D{bson.E{Key: "model.cells.type", Value: "senergy.NodeElement"}}
+	if version != "" {
+		match = append(match, bson.E{Key: "model.cells.operatorversion", Value: version})
+	}
 	pipeline := mongo.Pipeline{
 		{{"$unwind", "$model.cells"}},
-		{{"$match", bson.D{{"model.cells.type", "senergy.NodeElement"}}}},
+		{{"$match", match}},
 		{{"$group", bson.D{
 			{"_id", bson.D{
 				{"flowId", "$_id"},

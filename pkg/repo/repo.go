@@ -19,13 +19,16 @@ package repo
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
+	"slices"
 	"strconv"
 
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/lib"
 	operator_api "github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/operator-api"
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/smartservices"
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/util"
+	operator_repo "github.com/SENERGY-Platform/analytics-operator-repo-v2/lib"
 	pipelinesClient "github.com/SENERGY-Platform/analytics-pipeline/client"
 	pipelinesLib "github.com/SENERGY-Platform/analytics-pipeline/lib"
 	srv_info_hdl "github.com/SENERGY-Platform/go-service-base/srv-info-hdl"
@@ -35,9 +38,14 @@ import (
 type Repo struct {
 	srvInfoHdl   srv_info_hdl.Handler
 	dbRepo       FlowRepository
-	operatorRepo *operator_api.Repo
+	operatorRepo OperatorGetter
 	pipe         pipelinesClient.Client
 	smart        SmartServiceUsage
+}
+
+// OperatorGetter reads an operator with the caller's identity; *operator_api.Repo implements it.
+type OperatorGetter interface {
+	GetOperator(id, userId, authorization string) (operator_repo.Operator, error)
 }
 
 // SmartServiceUsage asks which smart services use a flow, with the caller's token.
@@ -86,15 +94,34 @@ func (r *Repo) UpdateFlow(id string, flow lib.Flow, userId string, auth string) 
 	return r.dbRepo.UpdateFlow(id, flow, userId, auth)
 }
 
+// validateOperators fills name, deployment type, cost and image of every operator node from the
+// operator service. A node that pins a version gets the image of that version; ports and config
+// stay as the client sent them.
 func (r *Repo) validateOperators(flow *lib.Flow, userId string, auth string) error {
 	for i, operator := range flow.Model.Cells {
 		if operator.Type == "senergy.NodeElement" {
+			if operator.OperatorId == nil || *operator.OperatorId == "" {
+				return lib.NewInputError(fmt.Errorf("node %s has no operatorId", operator.Id))
+			}
 			op, err := r.operatorRepo.GetOperator(*operator.OperatorId, userId, auth)
 			if err != nil {
 				return lib.NewExternalResourceError(err)
 			}
+			image := op.Image
+			if operator.OperatorVersion != nil && *operator.OperatorVersion == "" {
+				// An empty pin means no pin; storing it would hand clients a key they do not expect.
+				operator.OperatorVersion = nil
+			}
+			if operator.OperatorVersion != nil {
+				label := *operator.OperatorVersion
+				idx := slices.IndexFunc(op.Versions, func(v operator_repo.OperatorVersion) bool { return v.Version == label })
+				if idx < 0 {
+					return lib.NewInputError(fmt.Errorf("node %s pins operator version %s, which the operator does not have", operator.Id, label))
+				}
+				image = op.Versions[idx].Image
+			}
 			operator.Name = &op.Name
-			operator.Image = &op.Image
+			operator.Image = &image
 			operator.DeploymentType = &op.DeploymentType
 			if op.Cost != nil {
 				operator.Cost = op.Cost
@@ -163,13 +190,15 @@ func (r *Repo) GetFlow(flowId, userId, auth string) (response lib.Flow, err erro
 }
 
 func (r *Repo) GetOperatorUsage() ([]lib.OperatorFlowCount, error) {
-	return r.dbRepo.GetOperatorFlowMapping()
+	return r.dbRepo.GetOperatorFlowMapping("")
 }
 
 // GetUsageOfOperator counts the flows of all users from the same aggregation as GetOperatorUsage and
-// lists the flows the caller may read through the flow listing, so both use one read check.
-func (r *Repo) GetUsageOfOperator(operatorId, userId, auth string) (usage lib.OperatorFlowUsage, err error) {
-	mapping, err := r.dbRepo.GetOperatorFlowMapping()
+// lists the flows the caller may read through the flow listing, so both use one read check. A
+// non-empty version restricts both to flows with a node of the operator that pins that label; it
+// must be a valid label, which cannot contain the characters the listing filter splits on.
+func (r *Repo) GetUsageOfOperator(operatorId, version, userId, auth string) (usage lib.OperatorFlowUsage, err error) {
+	mapping, err := r.dbRepo.GetOperatorFlowMapping(version)
 	if err != nil {
 		return
 	}
@@ -184,7 +213,11 @@ func (r *Repo) GetUsageOfOperator(operatorId, userId, auth string) (usage lib.Op
 		return
 	}
 	// The filter splits on "," and "|"; the handler rejects ids containing them.
-	readable, err := r.dbRepo.All(userId, false, map[string][]string{"filter": {"operator:" + operatorId}}, auth)
+	filter := "operator:" + operatorId
+	if version != "" {
+		filter += "|operatorversion:" + version
+	}
+	readable, err := r.dbRepo.All(userId, false, map[string][]string{"filter": {filter}}, auth)
 	if err != nil {
 		return lib.OperatorFlowUsage{}, err
 	}

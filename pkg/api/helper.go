@@ -36,6 +36,10 @@ func handleError(err error) error {
 	case errors.As(err, new(*lib.NotFoundError)):
 		return lib.NewNotFoundError(errors.New(MessageNotFound))
 
+	case errors.As(err, new(*lib.InputError)):
+		// Built from static text and the ids of the client's own request, so it may reach the client.
+		return err
+
 	case errors.As(err, new(*lib.ForbiddenError)):
 		return lib.NewForbiddenError(errors.New(MessageForbidden))
 

@@ -42,13 +42,14 @@ type usageRepo struct {
 	err        error
 	calls      int
 	operatorId string
+	version    string
 	userId     string
 	auth       string
 }
 
-func (u *usageRepo) GetUsageOfOperator(operatorId, userId, auth string) (lib.OperatorFlowUsage, error) {
+func (u *usageRepo) GetUsageOfOperator(operatorId, version, userId, auth string) (lib.OperatorFlowUsage, error) {
 	u.calls++
-	u.operatorId, u.userId, u.auth = operatorId, userId, auth
+	u.operatorId, u.version, u.userId, u.auth = operatorId, version, userId, auth
 	return u.usage, u.err
 }
 
@@ -147,5 +148,46 @@ func TestGetOperatorUsageHidesInternalErrors(t *testing.T) {
 	}
 	if body := rec.Body.String(); body != MessageSomethingWrong {
 		t.Errorf("body = %q, want %q", body, MessageSomethingWrong)
+	}
+}
+
+func TestGetOperatorUsagePassesTheVersion(t *testing.T) {
+	srv := &usageRepo{usage: lib.OperatorFlowUsage{Readable: []lib.FlowRef{}}}
+
+	rec := getUsage(t, srv, "/operators/op-1/usage?version=v1.2.3", map[string]string{"X-UserId": "user-a"})
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200 (body %q)", rec.Code, rec.Body.String())
+	}
+	if srv.version != "v1.2.3" {
+		t.Errorf("version = %q, want v1.2.3", srv.version)
+	}
+}
+
+func TestGetOperatorUsageWithoutVersionAsksForNone(t *testing.T) {
+	srv := &usageRepo{usage: lib.OperatorFlowUsage{Readable: []lib.FlowRef{}}}
+
+	rec := getUsage(t, srv, "/operators/op-1/usage", map[string]string{"X-UserId": "user-a"})
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200", rec.Code)
+	}
+	if srv.calls != 1 || srv.version != "" {
+		t.Errorf("calls = %d, version = %q, want one call without version", srv.calls, srv.version)
+	}
+}
+
+func TestGetOperatorUsageRejectsMalformedVersions(t *testing.T) {
+	for _, version := range []string{"1.2.3", "v1.2", "v1.2.3-rc1", "latest", "v1.2.3%7Cv1.2.4", "v1.2.3,v1.2.4", "v01.2.3"} {
+		srv := &usageRepo{}
+
+		rec := getUsage(t, srv, "/operators/op-1/usage?version="+version, map[string]string{"X-UserId": "user-a"})
+
+		if rec.Code != http.StatusBadRequest {
+			t.Errorf("version %q: status = %d, want 400", version, rec.Code)
+		}
+		if srv.calls != 0 {
+			t.Errorf("version %q: the repo was asked", version)
+		}
 	}
 }

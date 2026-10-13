@@ -39,7 +39,7 @@ type fakeFlows struct {
 	allArgs  map[string][]string
 }
 
-func (f *fakeFlows) GetOperatorFlowMapping() ([]lib.OperatorFlowCount, error) {
+func (f *fakeFlows) GetOperatorFlowMapping(version string) ([]lib.OperatorFlowCount, error) {
 	if f.mapErr != nil {
 		return nil, f.mapErr
 	}
@@ -47,7 +47,7 @@ func (f *fakeFlows) GetOperatorFlowMapping() ([]lib.OperatorFlowCount, error) {
 	for _, flow := range f.flows {
 		seen := map[string]int32{}
 		for _, cell := range flow.Model.Cells {
-			if cell.Type == "senergy.NodeElement" && cell.OperatorId != nil {
+			if cell.Type == "senergy.NodeElement" && cell.OperatorId != nil && pinsOrAny(cell, version) {
 				seen[*cell.OperatorId]++
 			}
 		}
@@ -62,13 +62,24 @@ func (f *fakeFlows) GetOperatorFlowMapping() ([]lib.OperatorFlowCount, error) {
 	return result, nil
 }
 
+// pinsOrAny is true for every node when version is empty, otherwise only for nodes pinning it.
+func pinsOrAny(cell lib.Cell, version string) bool {
+	return version == "" || (cell.OperatorVersion != nil && *cell.OperatorVersion == version)
+}
+
 func (f *fakeFlows) All(userId string, _ bool, args map[string][]string, auth string) (lib.FlowsResponse, error) {
 	f.allCalls++
 	f.allUser, f.allAuth, f.allArgs = userId, auth, args
 	var operators []string
+	var version string
 	for _, raw := range args["filter"] {
-		if op, ok := strings.CutPrefix(raw, "operator:"); ok {
-			operators = append(operators, op)
+		for _, segment := range strings.Split(raw, "|") {
+			if op, ok := strings.CutPrefix(segment, "operator:"); ok {
+				operators = append(operators, op)
+			}
+			if v, ok := strings.CutPrefix(segment, "operatorversion:"); ok {
+				version = v
+			}
 		}
 	}
 	response := lib.FlowsResponse{Flows: []lib.Flow{}}
@@ -76,7 +87,7 @@ func (f *fakeFlows) All(userId string, _ bool, args map[string][]string, auth st
 		if flow.UserId != userId && !slices.Contains(f.sharedTo[userId], *flow.Id) {
 			continue
 		}
-		if len(operators) > 0 && !usesAny(flow, operators) {
+		if len(operators) > 0 && !usesAny(flow, operators, version) {
 			continue
 		}
 		response.Flows = append(response.Flows, flow)
@@ -85,9 +96,10 @@ func (f *fakeFlows) All(userId string, _ bool, args map[string][]string, auth st
 	return response, nil
 }
 
-func usesAny(flow lib.Flow, operators []string) bool {
+// usesAny needs one node that matches the operator and the version together, like the real filter.
+func usesAny(flow lib.Flow, operators []string, version string) bool {
 	for _, cell := range flow.Model.Cells {
-		if cell.Type == "senergy.NodeElement" && cell.OperatorId != nil && slices.Contains(operators, *cell.OperatorId) {
+		if cell.Type == "senergy.NodeElement" && cell.OperatorId != nil && slices.Contains(operators, *cell.OperatorId) && pinsOrAny(cell, version) {
 			return true
 		}
 	}
@@ -112,7 +124,7 @@ func TestGetUsageOfOperatorCountsFlowsOfAllUsers(t *testing.T) {
 	c1 := testFlow("c1", "user-c", "op-2")
 	r := &Repo{dbRepo: &fakeFlows{flows: []lib.Flow{a1, a2, b1, c1}}}
 
-	usage, err := r.GetUsageOfOperator("op-1", "user-a", "Bearer a")
+	usage, err := r.GetUsageOfOperator("op-1", "", "user-a", "Bearer a")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -124,7 +136,7 @@ func TestGetUsageOfOperatorCountsFlowsOfAllUsers(t *testing.T) {
 func TestGetUsageOfOperatorCountsAFlowOnceWhenItUsesAnOperatorTwice(t *testing.T) {
 	r := &Repo{dbRepo: &fakeFlows{flows: []lib.Flow{testFlow("twice", "user-a", "op-1", "op-1")}}}
 
-	usage, err := r.GetUsageOfOperator("op-1", "user-a", "")
+	usage, err := r.GetUsageOfOperator("op-1", "", "user-a", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -144,7 +156,7 @@ func TestGetUsageOfOperatorListsOnlyWhatTheCallerMayRead(t *testing.T) {
 	}
 	r := &Repo{dbRepo: db}
 
-	usage, err := r.GetUsageOfOperator("op-1", "user-a", "Bearer a")
+	usage, err := r.GetUsageOfOperator("op-1", "", "user-a", "Bearer a")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -164,7 +176,7 @@ func TestGetUsageOfOperatorForAnOperatorNoFlowUses(t *testing.T) {
 	db := &fakeFlows{flows: []lib.Flow{testFlow("a1", "user-a", "op-1")}}
 	r := &Repo{dbRepo: db}
 
-	usage, err := r.GetUsageOfOperator("op-unused", "user-a", "")
+	usage, err := r.GetUsageOfOperator("op-unused", "", "user-a", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -183,7 +195,89 @@ func TestGetUsageOfOperatorReturnsAggregationError(t *testing.T) {
 	boom := errors.New("mongo down")
 	r := &Repo{dbRepo: &fakeFlows{mapErr: boom}}
 
-	if _, err := r.GetUsageOfOperator("op-1", "user-a", ""); !errors.Is(err, boom) {
+	if _, err := r.GetUsageOfOperator("op-1", "", "user-a", ""); !errors.Is(err, boom) {
 		t.Errorf("err = %v, want %v", err, boom)
+	}
+}
+
+// pinnedFlow has one operator node per pair of operator id and version label; an empty label is no pin.
+func pinnedFlow(name, userId string, nodes ...[2]string) lib.Flow {
+	id := primitive.NewObjectID()
+	flow := lib.Flow{Id: &id, Name: name, UserId: userId}
+	for _, n := range nodes {
+		cell := lib.Cell{Type: "senergy.NodeElement", OperatorId: &n[0]}
+		if n[1] != "" {
+			cell.OperatorVersion = &n[1]
+		}
+		flow.Model.Cells = append(flow.Model.Cells, cell)
+	}
+	return flow
+}
+
+func TestGetUsageOfOperatorWithVersionCountsOnlyPinningFlows(t *testing.T) {
+	pinned := pinnedFlow("pinned", "user-a", [2]string{"op-1", "v1.0.0"})
+	otherUser := pinnedFlow("other user", "user-b", [2]string{"op-1", "v1.0.0"})
+	otherLabel := pinnedFlow("other label", "user-a", [2]string{"op-1", "v2.0.0"})
+	unpinned := pinnedFlow("unpinned", "user-a", [2]string{"op-1", ""})
+	otherOperator := pinnedFlow("other operator", "user-a", [2]string{"op-2", "v1.0.0"})
+	r := &Repo{dbRepo: &fakeFlows{flows: []lib.Flow{pinned, otherUser, otherLabel, unpinned, otherOperator}}}
+
+	usage, err := r.GetUsageOfOperator("op-1", "v1.0.0", "user-a", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if usage.Flows != 2 {
+		t.Errorf("flows = %d, want 2: the pinning flows of both users", usage.Flows)
+	}
+	want := []lib.FlowRef{{Id: pinned.Id.Hex(), Name: "pinned"}}
+	if !slices.Equal(usage.Readable, want) {
+		t.Errorf("readable = %v, want %v", usage.Readable, want)
+	}
+}
+
+func TestGetUsageOfOperatorWithVersionNeedsOneNodeWithBoth(t *testing.T) {
+	// The label is pinned on a node of another operator, so no node matches both.
+	split := pinnedFlow("split", "user-a", [2]string{"op-1", ""}, [2]string{"op-2", "v1.0.0"})
+	r := &Repo{dbRepo: &fakeFlows{flows: []lib.Flow{split}}}
+
+	usage, err := r.GetUsageOfOperator("op-1", "v1.0.0", "user-a", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if usage.Flows != 0 || len(usage.Readable) != 0 {
+		t.Errorf("usage = %+v, want none", usage)
+	}
+}
+
+func TestGetUsageOfOperatorWithVersionListsOnlyWhatTheCallerMayRead(t *testing.T) {
+	a1 := pinnedFlow("a1", "user-a", [2]string{"op-1", "v1.0.0"})
+	b1 := pinnedFlow("b1", "user-b", [2]string{"op-1", "v1.0.0"})
+	a2 := pinnedFlow("a2", "user-a", [2]string{"op-1", "v2.0.0"})
+	r := &Repo{dbRepo: &fakeFlows{flows: []lib.Flow{a1, b1, a2}}}
+
+	usage, err := r.GetUsageOfOperator("op-1", "v1.0.0", "user-a", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if usage.Flows != 2 {
+		t.Errorf("flows = %d, want 2", usage.Flows)
+	}
+	want := []lib.FlowRef{{Id: a1.Id.Hex(), Name: "a1"}}
+	if !slices.Equal(usage.Readable, want) {
+		t.Errorf("readable = %v, want %v", usage.Readable, want)
+	}
+}
+
+func TestGetUsageOfOperatorWithoutVersionCountsPinnedAndUnpinned(t *testing.T) {
+	pinned := pinnedFlow("pinned", "user-a", [2]string{"op-1", "v1.0.0"})
+	unpinned := pinnedFlow("unpinned", "user-a", [2]string{"op-1", ""})
+	r := &Repo{dbRepo: &fakeFlows{flows: []lib.Flow{pinned, unpinned}}}
+
+	usage, err := r.GetUsageOfOperator("op-1", "", "user-a", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if usage.Flows != 2 || len(usage.Readable) != 2 {
+		t.Errorf("usage = %+v, want both flows", usage)
 	}
 }
