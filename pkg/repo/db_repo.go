@@ -43,6 +43,7 @@ type FlowRepository interface {
 	DeleteFlow(id string, userId string, admin bool, auth string) (err error)
 	All(userId string, admin bool, args map[string][]string, auth string) (response lib.FlowsResponse, err error)
 	FindFlow(id, userId, auth string) (flow lib.Flow, err error)
+	SetFlowOwner(id, owner string) (flow lib.Flow, err error)
 	GetOperatorFlowMapping(version string) ([]lib.OperatorFlowCount, error)
 }
 
@@ -178,6 +179,61 @@ func (r *MongoRepo) UpdateFlow(id string, flow lib.Flow, _ string, auth string) 
 		return lib.NewNotFoundError(errors.New("could not find flow " + id))
 	}
 	return
+}
+
+var fullRights = permV2Client.PermissionsMap{Read: true, Write: true, Execute: true, Administrate: true}
+
+// SetFlowOwner gives owner full rights in permissions-v2 and then makes it the stored owner; the
+// startup repair re-grants the document owner, so rights without the document change are the safe
+// intermediate state and a repeat completes it. The update touches userId and the legacy userid
+// only: dateUpdated stays, because the automation-engine reads it as a change of the flow. A flow
+// without a permissions entry is left alone. Permissions are written back without a version check.
+func (r *MongoRepo) SetFlowOwner(id, owner string) (flow lib.Flow, err error) {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return flow, lib.NewNotFoundError(errors.New("could not find flow " + id))
+	}
+	err = Mongo().FindOne(CTX, bson.M{"_id": objID}, options.FindOne().SetProjection(bson.M{"_id": 1})).Err()
+	if errors.Is(err, mongo.ErrNoDocuments) {
+		return flow, lib.NewNotFoundError(errors.New("could not find flow " + id))
+	}
+	if err != nil {
+		return flow, err
+	}
+
+	// Also when permissions-v2 knows no entry: the startup repair deletes such a flow, or it is
+	// being created right now and an entry written here would keep its creator out.
+	resource, err, _ := r.perm.GetResource(permV2Client.InternalAdminToken, PermV2InstanceTopic, id)
+	if err != nil {
+		return flow, err
+	}
+	permissions := resource.ResourcePermissions
+	if permissions.UserPermissions[owner] != fullRights {
+		if permissions.UserPermissions == nil {
+			permissions.UserPermissions = map[string]permV2Client.PermissionsMap{}
+		}
+		permissions.UserPermissions[owner] = fullRights
+		_, err, _ = r.perm.SetPermission(permV2Client.InternalAdminToken, PermV2InstanceTopic, id, permissions)
+		if err != nil {
+			return flow, err
+		}
+	}
+
+	res, err := Mongo().UpdateOne(CTX, bson.M{"_id": objID}, bson.M{
+		"$set":   bson.M{"userId": owner},
+		"$unset": bson.M{"userid": ""},
+	})
+	if err != nil {
+		return flow, err
+	}
+	if res.MatchedCount == 0 {
+		return flow, lib.NewNotFoundError(errors.New("could not find flow " + id))
+	}
+	err = Mongo().FindOne(CTX, bson.M{"_id": objID}).Decode(&flow)
+	if errors.Is(err, mongo.ErrNoDocuments) {
+		return flow, lib.NewNotFoundError(errors.New("could not find flow " + id))
+	}
+	return flow, err
 }
 
 func (r *MongoRepo) DeleteFlow(id string, _ string, _ bool, auth string) (err error) {

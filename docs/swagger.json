@@ -305,6 +305,77 @@
                 }
             }
         },
+        "/flow/{id}/owner": {
+            "put": {
+                "description": "Administrators only. Gives the user full rights on the flow in permissions-v2, keeping every other entry, and then makes the user the stored owner; the id and dateUpdated stay. Answers the flow as GET does. A repeat is safe and completes a move that failed halfway. Answers 500 and changes nothing when permissions-v2 has no entry for the flow.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Flow"
+                ],
+                "summary": "Move flow to another owner",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Flow ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "New owner",
+                        "name": "owner",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/lib.OwnerCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/lib.Flow"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/info": {
             "get": {
                 "description": "Get basic service and runtime information.",
@@ -565,6 +636,14 @@
                     "items": {
                         "$ref": "#/definitions/github_com_SENERGY-Platform_analytics-flow-repo-v2_lib.FlowRef"
                     }
+                }
+            }
+        },
+        "lib.OwnerCommand": {
+            "type": "object",
+            "properties": {
+                "owner": {
+                    "type": "string"
                 }
             }
         },

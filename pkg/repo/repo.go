@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"slices"
 	"strconv"
+	"strings"
 
 	"github.com/SENERGY-Platform/analytics-flow-repo-v2/lib"
 	operator_api "github.com/SENERGY-Platform/analytics-flow-repo-v2/pkg/operator-api"
@@ -187,6 +188,15 @@ func (r *Repo) GetFlows(userId string, args map[string][]string, auth string) (r
 
 func (r *Repo) GetFlow(flowId, userId, auth string) (response lib.Flow, err error) {
 	return r.dbRepo.FindFlow(flowId, userId, auth)
+}
+
+// SetFlowOwner moves the flow to owner, which must be a user id without surrounding whitespace.
+// The caller checks that the user is an administrator.
+func (r *Repo) SetFlowOwner(id, owner string) (lib.Flow, error) {
+	if owner == "" || strings.TrimSpace(owner) != owner {
+		return lib.Flow{}, lib.NewInputError(errors.New("owner must be a user id without surrounding whitespace"))
+	}
+	return r.dbRepo.SetFlowOwner(id, owner)
 }
 
 func (r *Repo) GetOperatorUsage() ([]lib.OperatorFlowCount, error) {

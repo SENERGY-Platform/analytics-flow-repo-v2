@@ -37,6 +37,10 @@ type Flow struct {
 	DateUpdated time.Time           `bson:"dateUpdated,omitempty" json:"dateUpdated,omitempty"`
 }
 
+type OwnerCommand struct {
+	Owner string `json:"owner"`
+}
+
 type FlowCreateResponse struct {
 	Id string `json:"_id"`
 }

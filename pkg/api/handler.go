@@ -183,6 +183,47 @@ func stillInUseResponse(e *lib.StillInUseError) lib.StillInUseResponse {
 	return body
 }
 
+// putFlowOwner godoc
+// @Summary Move flow to another owner
+// @Description	Administrators only. Gives the user full rights on the flow in permissions-v2, keeping every other entry, and then makes the user the stored owner; the id and dateUpdated stay. Answers the flow as GET does. A repeat is safe and completes a move that failed halfway. Answers 500 and changes nothing when permissions-v2 has no entry for the flow.
+// @Tags Flow
+// @Accept json
+// @Produce json
+// @Param id path string true "Flow ID"
+// @Param owner body lib.OwnerCommand true "New owner"
+// @Success	200 {object} lib.Flow
+// @Failure 400 {string} MessageBadInput
+// @Failure 401 {string} MessageUnauthorized
+// @Failure 403 {string} MessageForbidden
+// @Failure 404 {string} MessageNotFound
+// @Failure 500 {string} MessageSomethingWrong
+// @Router /flow/{id}/owner [put]
+func putFlowOwner(srv Repo) (string, string, gin.HandlerFunc) {
+	return http.MethodPut, FlowPath + "/:id/owner", func(gc *gin.Context) {
+		// Checked here and not by AdminMiddleware, which answers 401 for the admin routes.
+		admin, err := isAdmin(gc)
+		if err != nil || !admin {
+			if err != nil {
+				util.Logger.Warn("could not check the admin role", "error", err)
+			}
+			_ = gc.Error(lib.NewForbiddenError(errors.New(MessageForbidden)))
+			return
+		}
+		var request lib.OwnerCommand
+		if err = gc.ShouldBindJSON(&request); err != nil {
+			_ = gc.Error(lib.NewInputError(errors.New(MessageBadInput)))
+			return
+		}
+		flow, err := srv.SetFlowOwner(gc.Param("id"), request.Owner)
+		if err != nil {
+			util.Logger.Error("error moving flow", "error", err)
+			_ = gc.Error(handleError(err))
+			return
+		}
+		gc.JSON(http.StatusOK, flow)
+	}
+}
+
 // getAll godoc
 // @Summary Get flows
 // @Description	Gets all flows

@@ -42,6 +42,8 @@ func New(srv Repo, staticHeader map[string]string, urlPrefix string) (*gin.Engin
 	gin.SetMode(gin.ReleaseMode)
 	httpHandler := gin.New()
 	httpHandler.RedirectTrailingSlash = false
+	// A wrong method on a known path answers 405; clients probe for the owner route with a GET.
+	httpHandler.HandleMethodNotAllowed = true
 	httpHandler.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
 		AllowMethods:     []string{"GET", "POST", "DELETE", "OPTIONS", "PUT"},
