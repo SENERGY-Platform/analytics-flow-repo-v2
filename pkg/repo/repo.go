@@ -59,6 +59,10 @@ func New(srvInfoHdl srv_info_hdl.Handler, perm permV2Client.Client, operatorRepo
 		// Without it every delete would end in a 502; better to fail at startup.
 		return nil, errors.New("no smart-service-repository address configured")
 	}
+	// The permission repair grants the stored owner, so it must see owners under userId only.
+	if _, _, err := migrateLegacyOwners(context.Background(), Mongo()); err != nil {
+		return nil, fmt.Errorf("migrate legacy flow owners: %w", err)
+	}
 	dbRepo := NewMongoRepo(perm)
 	err := dbRepo.validateFlowPermissions()
 	return &Repo{

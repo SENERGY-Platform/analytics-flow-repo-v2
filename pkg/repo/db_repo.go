@@ -97,11 +97,18 @@ func (r *MongoRepo) validateFlowPermissions() (err error) {
 		dbIds = append(dbIds, flowId)
 		resource, ok := permResourceMap[flowId]
 		if ok {
-			permissions.UserPermissions = resource.ResourcePermissions.UserPermissions
+			// a copy: ownerPermissions edits it, and a skipped flow must keep the listed entry unchanged
+			maps.Copy(permissions.UserPermissions, resource.ResourcePermissions.UserPermissions)
 			permissions.GroupPermissions = resource.GroupPermissions
 			permissions.RolePermissions = resource.ResourcePermissions.RolePermissions
 		}
-		SetDefaultPermissions(flow, permissions)
+		if flow.UserId == "" {
+			util.Logger.Warn("flow has no owner, granting no default rights", "flow_id", flowId)
+		}
+		if !ownerPermissions(flow, permissions) {
+			util.Logger.Warn("flow has no user with administrate rights, keeping its stored permissions", "flow_id", flowId)
+			continue
+		}
 
 		_, err, _ = r.perm.SetPermission(permV2Client.InternalAdminToken, PermV2InstanceTopic, flowId, permissions)
 		if err != nil {
@@ -320,9 +327,7 @@ func (r *MongoRepo) All(userId string, admin bool, args map[string][]string, aut
 		andFilters = append(andFilters, bson.M{
 			"$or": bson.A{
 				bson.M{"_id": bson.M{"$in": ids}},
-				// Flow stores the owner as userId; userid is kept for documents written under that key.
 				bson.M{"userId": userId},
-				bson.M{"userid": userId},
 			},
 		})
 	}

@@ -29,3 +29,13 @@ func SetDefaultPermissions(instance lib.Flow, permissions permV2Client.ResourceP
 		Administrate: true,
 	}
 }
+
+// ownerPermissions removes rights of the empty user id and grants a non-empty owner full rights. It
+// reports whether permissions-v2 accepts the result, which needs a user with administrate rights.
+func ownerPermissions(instance lib.Flow, permissions permV2Client.ResourcePermissions) bool {
+	delete(permissions.UserPermissions, "")
+	if instance.UserId != "" {
+		SetDefaultPermissions(instance, permissions)
+	}
+	return permissions.Valid()
+}
